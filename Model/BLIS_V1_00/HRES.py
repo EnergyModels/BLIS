@@ -349,7 +349,8 @@ class HRES:
         F = LCOE_scale * fuelCost_dollars # $
         
         # E, annual electricity generation
-        E = LCOE_scale * powerOutput_MWh * 1000.0 # kWH
+#        E = LCOE_scale * powerOutput_MWh * 1000.0 # kWH                 # Original
+        E = LCOE_scale * demand_MWh * 1000.0 # kWH                 # Change
     
         num = I + M + F
         denom = E
