@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # BLIS Imports:
-from Components   import Solar, Fuel, Battery
+from blis import defaultInputs, PowerPlant, Solar, Fuel, Battery, Grid
 
 #========================================================================
 # Class to simulate and analyze Hybrid Renewable Energy System (HRES)
@@ -35,13 +35,14 @@ class HRES:
     #========================================================================
     # Initialize HRES Simulation
     #========================================================================
-    def __init__(self,data,plant,solar=Solar(),batt=Battery(),fuel=Fuel(),i=0.02,n=20):
+    def __init__(self,data,plant,solar=Solar(),batt=Battery(),fuel=Fuel(),grid=Grid(),i=0.02,n=20):
         # Store Inputs
         self.data  = data
         self.solar = solar
         self.batt  = batt
         self.fuel  = fuel
         self.plant = plant
+        self.grid  = grid
         self.i     = i   # (fraction) Interst rate 
         self.n     = n   # (years) System lifetime
         
@@ -52,13 +53,13 @@ class HRES:
         rows = range(self.steps)
         cols = ['PowerRequest','PowerOutput','PowerRamp','HeatInput','Efficiency',
                 'battCharge','battIncrease','battDecrease','battDischargeRate','battChargeRate','battRamp',
-                'solarUsed','loadShed','deficit']
+                'solarUsed','loadShed','deficit','gridUsed','Emissions']
         self.perf = pd.DataFrame(data=0.0,index=rows,columns = cols)
         
         #----
         # Create pandas series to store results
         #----
-        attributes = ['demand_MWh','solar_MWh','powerOutput_MWh','heatInput_MWh','solarUsed_MWh','loadShed_MWh',
+        attributes = ['demand_MWh','solar_MWh','powerOutput_MWh','heatInput_MWh','solarUsed_MWh','loadShed_MWh','gridUsed_MWh',
                       'fuelCost_dollars','LCOE','efficiency_pct','emissions_tons','deficit_max','deficit_min','deficit_pct_time',
                       'deficit_pct_energy','solarCurtail_pct','loadShed_pct_energy','loadShed_pct_time']
         self.results = pd.Series(index = attributes)
@@ -66,7 +67,7 @@ class HRES:
     #========================================================================
     # Update - empty control, needs to be updated by all children of HRES
     #========================================================================
-    def update(self,dt, demand, solar):
+    def update(self, datetimeUTC, dt, demand, solar):
                      
         #----------
         # Calculate Battery Dis/charge Rate Available
@@ -74,35 +75,37 @@ class HRES:
         batt_c_rate = self.batt.getChargeRateAvail(dt)
         batt_d_rate = self.batt.getDischargeRateAvail(dt)
                 
-        #----------
-        # Power Plant Control 
-        #----------
-        # Get Minimum Power Plant Request and 
-        #     minimum generation possible for current timestep
-        minPowerRequest = self.plant.minPowerRequest
-        minGen = minPowerRequest + solar
         
-        # If minimum generation will meet or exceed demand, request minimum power plant output
-        # Otherwise, use solar and battery, then request additional production
-        if minGen > demand or abs(minGen - demand) < threshold:
-            powerRequest = minPowerRequest
-        else:
-            powerRequest = demand - solar - batt_d_rate
-
-        # Keep Power Request at or below max plant capacity
-        if powerRequest >self.plant.capacity:
-            powerRequest =self.plant.capacity
+        if self.plant.capacity > 0.0:
+            #----------
+            # Power Plant Control 
+            #----------    
+            # Get Minimum Power Plant Request and 
+            #     minimum generation possible for current timestep
+            minPowerRequest = self.plant.minPowerRequest
+            minGen = minPowerRequest + solar
             
-        # Keep Power Request at or above min plant capacity
-        if powerRequest <minPowerRequest:
-            powerRequest = minPowerRequest
-            
-        # Keep power request at or above threshold
-        if powerRequest < threshold:
-            powerRequest = threshold
-
-        # Update Power Plant Status
-        self.plant.update(powerRequest,dt)
+            # If minimum generation will meet or exceed demand, request minimum power plant output
+            # Otherwise, use solar and battery, then request additional production
+            if minGen > demand or abs(minGen - demand) < threshold:
+                powerRequest = minPowerRequest
+            else:
+                powerRequest = demand - solar - batt_d_rate
+    
+            # Keep Power Request at or below max plant capacity
+            if powerRequest >self.plant.capacity:
+                powerRequest =self.plant.capacity
+                
+            # Keep Power Request at or above min plant capacity
+            if powerRequest <minPowerRequest:
+                powerRequest = minPowerRequest
+                
+            # Keep power request at or above threshold
+            if powerRequest < threshold:
+                powerRequest = threshold
+    
+            # Update Power Plant Status
+            self.plant.update(powerRequest,dt)
 
         #----------
         # Perform Energy Balance
@@ -114,6 +117,7 @@ class HRES:
         battDecrease = 0.0
         solarUsed    = 0.0
         loadShed     = 0.0
+        gridUsed     = 0.0
         
         # 1) Demand = Supply (within threshold)
         if (abs(diff) < threshold):
@@ -149,7 +153,22 @@ class HRES:
                battDecrease = batt_d_rate
             else:
                battDecrease = abs(diff)
+               
+            # Update
+            diff = diff + battDecrease
             
+            # Use grid to make-up remaining difference
+            if diff < self.grid.capacity:
+                gridUsed = abs(diff)
+            else:
+                gridUsed = self.grid.capacity
+        
+        
+        #----------
+        # Calculate Emissions
+        #----------  
+        Emissions =  (gridUsed * dt * self.grid.getEmissions(datetimeUTC)) + (self.plant.heatInput / 60.0 * dt * self.fuel.emissions)
+        
         #----------
         # Update Battery
         #----------  
@@ -158,11 +177,12 @@ class HRES:
         #----------  
         # Check Energy Balance
         #----------  
-        E_in = solar + self.plant.powerOutput + battDecrease
+        E_in = solar + self.plant.powerOutput + battDecrease + gridUsed
         E_out = demand + battIncrease + loadShed + (solar - solarUsed)
         E_balance = E_in - E_out        
             # Remainder of energy balance stored as deficit
         deficit            = E_balance
+        
     
         #=======
         # Write to console if debugging
@@ -190,7 +210,7 @@ class HRES:
         #=======
         attributes = ['PowerRequest','PowerOutput','PowerRamp','HeatInput','Efficiency',
                 'battCharge','battIncrease','battDecrease','battDischargeRate','battChargeRate','battRamp',
-                'solarUsed','loadShed','deficit']
+                'solarUsed','loadShed','deficit','gridUsed','Emissions']
         perf = pd.Series(index = attributes)
         
         # Power plant
@@ -210,6 +230,8 @@ class HRES:
         perf.solarUsed      = solarUsed
         perf.loadShed       = loadShed
         perf.deficit        = deficit
+        perf.gridUsed       = gridUsed
+        perf.Emissions      = Emissions
         
         return perf
 
@@ -222,6 +244,7 @@ class HRES:
         for step in range(self.steps):
             
             # Access current demand and time step
+            datetimeUTC = self.data.loc[step,'DatetimeUTC']
             dt          = self.data.loc[step,'dt']
             demand      = self.data.loc[step,'demand']
             solar       = self.data.loc[step,'solar']
@@ -229,12 +252,13 @@ class HRES:
             # Print Status (if debugging)
             if debug== True:
                 print "\n\nStep: " + str(step)
+                print "datetimeUTC : " + str(datetimeUTC)
                 print "dt    (min) : " + str(dt)
                 print "Demand (MW) : " + str(demand)
                 print "Solar  (MW) : " + str(solar) 
                 
             # Update System Operation
-            self.perf.loc[step,:] = self.update(dt, demand, solar)
+            self.perf.loc[step,:] = self.update(datetimeUTC, dt, demand, solar)
             
             # Store Current Performance
             
@@ -264,6 +288,7 @@ class HRES:
         df_solarUsed           = perf.loc[:]["solarUsed"]      * data[:]["dt"]/60
         df_loadShed            = perf.loc[:]["loadShed"]       * data[:]["dt"]/60
         df_deficit             = perf.loc[:]["deficit"]        * data[:]["dt"]/60
+        df_gridUsed            = perf.loc[:]["gridUsed"]       * data[:]["dt"]/60
         
         # Sum for the year
         demand_MWh           = df_demand.sum()
@@ -273,6 +298,7 @@ class HRES:
         solarUsed_MWh        = df_solarUsed.sum()
         loadShed_MWh         = df_loadShed.sum()
         deficit_MWh          = df_deficit.sum()
+        gridUsed_MWh         = df_gridUsed.sum()
         
         # Fuel Cost
         fuelCost_dollars = heatInput_MWh * self.fuel.cost  #$
@@ -323,7 +349,7 @@ class HRES:
         #----
         # Emissions
         #----
-        emissions = self.fuel.emissions * heatInput_MWh
+        emissions = perf.loc[:]["Emissions"].sum()
         
         #----
         # LCOE
@@ -343,14 +369,15 @@ class HRES:
         plant_OM_fix  = self.plant.cost_OM_fix  * (1000.0 * self.plant.capacity)   # $
         OM_fix_PV     = self.solar.cost_OM_fix  * (1000.0 * self.solar.capacity )  # $
         OM_fix_batt   = self.batt.cost_OM_fix   * (1000.0 * self.batt.capacity)    # $
-        M = plant_var_OM + plant_OM_fix + OM_fix_PV + OM_fix_batt
+        grid_var_OM   = self.grid.cost_OM_var  * LCOE_scale * gridUsed_MWh     # $
+        M = plant_var_OM + plant_OM_fix + OM_fix_PV + OM_fix_batt + grid_var_OM
     
         # F, annual fuel cost
         F = LCOE_scale * fuelCost_dollars # $
         
         # E, annual electricity generation
-#        E = LCOE_scale * powerOutput_MWh * 1000.0 # kWH                 # Original
-        E = LCOE_scale * demand_MWh * 1000.0 # kWH                 # Change
+#        E = LCOE_scale * powerOutput_MWh * 1000.0 # kWH                    #!!!!!!!!
+        E = LCOE_scale * demand_MWh * 1000.0 # kWH
     
         num = I + M + F
         denom = E
@@ -366,6 +393,7 @@ class HRES:
         self.results.heatInput_MWh          = heatInput_MWh       # MWh
         self.results.solarUsed_MWh          = solarUsed_MWh       # MWh
         self.results.loadShed_MWh           = loadShed_MWh        # MWh
+        self.results.gridUsed_MWh           = gridUsed_MWh        # MWh
         
         self.results.emissions_tons         = emissions           # tons
         
@@ -405,7 +433,6 @@ class HRES:
         plt.grid()
         plt.xlabel('Time (min)')
         plt.ylabel('Power Plant Efficiency (%)')
-#        plt.legend()
         
         # Save and close
         plotName = caseName + "_efficiency.png"
@@ -427,10 +454,11 @@ class HRES:
                 y1 = self.perf.loc[:,'PowerOutput']
                 y2 = self.data.loc[:,'solar']
                 y3 = self.perf.loc[:,'battDischargeRate']
+                y4 = self.perf.loc[:,'gridUsed']
                
-                y = np.vstack((y1,y2,y3))
-                pal = [colors[2],colors[4],colors[0]]
-                labels = ['Natural Gas','Solar PV','Battery']
+                y = np.vstack((y1,y2,y3,y4))
+                pal = [colors[2],colors[4],colors[0],colors[5]]
+                labels = ['Natural Gas','Solar PV','Battery','Grid']
                 y_label = "Generation\n(MW)"
                 # Don't label bottom
                 labelbottom = 'off'
@@ -534,3 +562,22 @@ class HRES:
         plt.savefig(plotName,dpi=plotDPI)
         plt.close()
         return plotName
+
+
+# ========================================================================
+# Solar Battery Grid System (SBGS), child of HRES
+# ========================================================================
+class SBGS(HRES):
+
+    def __init__(self, data, solar=Solar(), batt=Battery(), grid=Grid(capacity=1000.), i=0.02, n=20):
+        # Create PowerPlant with 0.0 MW Capacity
+        plant_inputs = defaultInputs(plantType='CCGT')
+        plant_inputs.capacity = 0.0  # (MW)
+        plant_inputs.maxEfficiency = 100.0  # (%)
+        plant = PowerPlant(plant_inputs)
+
+        # Create default fuel, will not be used
+        fuel = Fuel()
+
+        # All other inputs are passed on to HRES function
+        HRES.__init__(self, data, plant=plant, solar=solar, batt=batt, fuel=fuel, grid=grid, i=0.02, n=20)

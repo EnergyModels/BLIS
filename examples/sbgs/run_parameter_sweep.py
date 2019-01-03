@@ -12,17 +12,12 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# General Imports:
-import pandas        as pd
+import pandas as pd
 import time
 import numpy as np
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
-
-# BLIS Imports:
-from Components   import Solar, Fuel, Battery
-from PowerPlant   import PowerPlant, defaultInputs
-from HRES         import HRES
+from blis import Solar, Grid, Battery, SBGS
 
 #=====================
 # Function to enable parameter sweep
@@ -32,25 +27,20 @@ def parameterSweep(battSize):
     t0 = time.time()
     
     # Load_Data - Expected Columns (units): DatetimeUTC (UTC format), t (min), dt (min), demand (MW), solar (MW)
-    data         = pd.read_csv('data063_Oct30th.csv') 
+    data = pd.read_csv('data063_Oct30th.csv')
     
     # Solar Plant - All inputs are optional (default values shown below)
-    solar        = Solar(plantType = 'PV', capacity = 31.2, cost_install = 2004., cost_OM_fix = 22.02) 
-    
+    solar = Solar(plantType='PV', capacity=32.3, cost_install=2004., cost_OM_fix=22.02)
+
     # Battery Storage - All inputs are optional (default values shown below)
-    batt         = Battery(capacity = battSize, rateMax= battSize, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6) 
-    
-    # Fuel - All inputs are optional (default values shown below)
-    fuel         = Fuel(fuelType='NATGAS',cost = 23.27,emissions = 0.18)
-    
-    # Create power plant
-        # 1 - create pandas series of power plant characteristics
-    plant_inputs = defaultInputs(plantType = 'CCGT') # CCGT(default) or OCGT (Combined Cycle Gas Turbine or Open Cycle Gas Turbine)
-        # 2 - create power plant
-    plant        = PowerPlant(plant_inputs)
-    
-    # Create HRES (controller is built-in), data and plant are only required inputs, all other components will revert to default if not specified
-    hres         = HRES(data,plant,solar=solar,batt=batt,fuel=fuel,i=0.02,n=20)
+    batt = Battery(capacity=30.0, rateMax=30.0, roundTripEff=90.0, cost_install=2067., cost_OM_fix=35.6,
+                   initCharge=100.0)
+    # Grid Electricity Supply - All inputs are optional (default values shown below)
+    grid = Grid(capacity=1000.0, maxEmissions=0.5, emissionCurve_hr=np.linspace(1, 24, 24),
+                emissionCurve_pct=np.linspace(100, 100, 24), cost_OM_var=100.0)
+
+    # Create SBGS (controller is built-in), data is only required inputs, all other components will revert to default if not specified
+    hres = SBGS(data, solar=solar, batt=batt, grid=grid, i=0.02, n=20)
     
     # Run Simulation
     results = hres.run()
@@ -83,3 +73,6 @@ if __name__ == '__main__':
     df_in.columns = [param_name]
     df_out = pd.DataFrame(output)
     df = pd.concat([df_in,df_out],axis=1)
+
+    # Save results
+    df.to_csv('parameter_sweep_results.csv')

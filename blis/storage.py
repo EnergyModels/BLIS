@@ -16,33 +16,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 debug = False # If True, additional information is presented to the console
 
 #========================================================================
-# Class to hold details of the solar power plant
-#========================================================================
-class Solar:
-    
-    #----------
-    # Instantiate
-    #----------
-    def __init__(self, plantType = 'PV', capacity = 32.3, cost_install = 2004., cost_OM_fix = 22.02):
-        
-        # Properties:
-        self.plantType        = plantType         # (string) Technology type
-        self.capacity         = capacity          # (MW) capacity 
-        self.cost_install     = cost_install      # ($/kW)
-        self.cost_OM_fix      = cost_OM_fix       # ($/kW/year)
-        
-#========================================================================
-# Class to hold details of the PowerPlant fuel
-#========================================================================        
-class Fuel:
-    
-    def __init__(self,fuelType='NATGAS',cost = 23.27,emissions = 0.18):
-        self.fuelType  = fuelType   # name of fuel
-        self.cost      = cost       # cost [$] per MWh thermal
-        self.emissions = emissions  # CO2 emissions [tons] per MWh thermal
-
-
-#========================================================================
 # General class for energy storage
 #========================================================================
 class Storage:
@@ -50,7 +23,7 @@ class Storage:
     #----------
     # Instantiate
     #----------
-    def __init__(self, capacity = 30.0, chargeRateMax= 30.0, dischargeRateMax = 30.0, roundTripEff = 90.0, tau = 30.0, cost_install = 2067., cost_OM_fix = 35.6):
+    def __init__(self, capacity = 30.0, chargeRateMax= 30.0, dischargeRateMax = 30.0, roundTripEff = 90.0, tau = 30.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = 0.0):
         
         
         # Battery Properties:
@@ -62,6 +35,7 @@ class Storage:
         self.tau              = tau               # (min) Time constant for slowing discharge rate when approaching empty
         self.cost_install     = cost_install      # ($/kW)
         self.cost_OM_fix      = cost_OM_fix       # ($/kW/year)
+        self.initCharge       = initCharge 		  # (%)
         
             # Derived
         self.chargeMin        = 0.0               # (MW-min)
@@ -73,7 +47,7 @@ class Storage:
         self.chargeRate     = 0.0 # MW
         self.increase       = 0.0 # MW-min
         self.decrease       = 0.0 # MW-min
-        self.charge         = 0.0 # MW-min
+        self.charge         = initCharge*self.chargeMax # MW-min
 
     #----------
     # Calculate Available Charge Rate (MW)
@@ -133,7 +107,5 @@ class Storage:
 #========================================================================
 class Battery(Storage):
     
-    def __init__(self, capacity = 30.0, rateMax= 30.0, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6):
-        Storage.__init__(self, capacity = capacity, chargeRateMax= rateMax, dischargeRateMax = rateMax, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6)
-        
-    
+    def __init__(self, capacity = 30.0, rateMax= 30.0, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = 0.0):
+        Storage.__init__(self, capacity = capacity, chargeRateMax= rateMax, dischargeRateMax = rateMax, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = initCharge)
