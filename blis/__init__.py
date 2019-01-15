@@ -22,3 +22,4 @@ from .storage import Storage
 from .storage import Battery
 from .hres import HRES
 from .hres import SBGS
+from .monte_carlo_inputs import monteCarloInputs

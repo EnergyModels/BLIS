@@ -17,24 +17,29 @@ import time
 import numpy as np
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
-from blis import Solar, Grid, Battery, SBGS
+from blis import Solar, Grid, Battery, SBGS, monteCarloInputs
 
 #=====================
 # Function to enable parameter sweep
 #=====================
-def parameterSweep(battSize):
+def parameterSweep(inputs):
     # Record time to solve
     t0 = time.time()
     
     # Load_Data - Expected Columns (units): DatetimeUTC (UTC format), t (min), dt (min), demand (MW), solar (MW)
-    data = pd.read_csv('data063_Oct30th.csv')
-    
+    data = pd.read_csv('data063.csv')
+    # data = pd.read_csv('data063.csv')
+
+    # Scale data to match provided pvSize
+    data.solar = data.solar * inputs.pvSize / 32.3
+
     # Solar Plant - All inputs are optional (default values shown below)
-    solar = Solar(plantType='PV', capacity=32.3, cost_install=2004., cost_OM_fix=22.02)
+    solar = Solar(plantType='PV', capacity=inputs.pvSize, cost_install=2004., cost_OM_fix=22.02)
 
     # Battery Storage - All inputs are optional (default values shown below)
-    batt = Battery(capacity=battSize, rateMax=battSize, roundTripEff=90.0, cost_install=2067., cost_OM_fix=35.6,
+    batt = Battery(capacity=inputs.capacity, rateMax=inputs.rate, roundTripEff=inputs.eff, cost_install=inputs.costInstall, cost_OM_fix=inputs.costOM,
                    initCharge=100.0)
+
     # Grid Electricity Supply - All inputs are optional (default values shown below)
     grid = Grid(capacity=1000.0, maxEmissions=0.5, emissionCurve_hr=np.linspace(1, 24, 24),
                 emissionCurve_pct=np.linspace(100, 100, 24), cost_OM_var=100.0)
@@ -48,31 +53,55 @@ def parameterSweep(battSize):
     # Display Elapsed Time
     t1 = time.time()
     print "Time Elapsed: " + str(round(t1-t0,2)) + " s"
-    
-    # Extract LCOE
-    return results
 
-#=====================
+    # Combine inputs and results into output and then return
+    output = pd.concat([inputs, results], axis=0)
+    return output
+# =====================
 # Main Program
-#=====================
+# =====================
 if __name__ == '__main__':
-    
-    # Parameter to vary
-    param_array = np.linspace(0.,100.,num=101)
-    param_name = 'battSize_MWh'
-    
-    # Number of cores to use
-    num_cores = multiprocessing.cpu_count()-1 # Consider saving one for other processes
-    
-    # Run Simulations
-    with parallel_backend('multiprocessing', n_jobs=num_cores):
-        output = Parallel(verbose=10)(delayed(parameterSweep)(param) for param in param_array)  
-        
-    # Move input and output into a dataframe
-    df_in = pd.DataFrame(param_array)
-    df_in.columns = [param_name]
-    df_out = pd.DataFrame(output)
-    df = pd.concat([df_in,df_out],axis=1)
 
-    # Save results
-    df.to_csv('parameter_sweep_results.csv')
+    # ==============
+    # User Inputs
+    # ==============
+    studyName = "results_sizing"
+
+    # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
+    xls_filename = "inputs_sizing.xlsx"
+    sheetnames = ["CAES", "BATT", "UTES", "Flywheel"]
+
+    # Specify number of iterations per case
+    iterations = 14  # To test
+    # iterations = 100 # Used in article
+
+    # Number of cores to use
+    num_cores = multiprocessing.cpu_count() - 1  # Consider saving one for other processes
+
+    # ==============
+    # Run Simulations
+    # ==============
+    all_outputs = []
+    count = 0
+
+    # Iterate each Monte Carlo case
+    for sheetname in sheetnames:
+
+        inputs = monteCarloInputs(xls_filename, sheetname, iterations)
+
+        # Perform Simulations (Run all plant variations in parallel)
+        with parallel_backend('multiprocessing', n_jobs=num_cores):
+            output = Parallel(verbose=10)(
+                delayed(parameterSweep)(inputs.loc[index]) for index in range(iterations))
+
+            # Add output to all_outputs
+        all_outputs = all_outputs + output
+        # Move output to dataframe and save (if iterations greater than 10)
+        if iterations > 10:
+            df = pd.DataFrame(output)
+            df.to_csv(studyName + '_pt' + str(count) + '.csv')
+            count = count + 1
+
+    # Combine outputs into single dataframe and save
+    df = pd.DataFrame(all_outputs)
+    df.to_csv(studyName + '.csv')
