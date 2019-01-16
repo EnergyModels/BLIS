@@ -38,7 +38,7 @@ def parameterSweep(inputs):
 
     # Battery Storage - All inputs are optional (default values shown below)
     batt = Battery(capacity=inputs.capacity, rateMax=inputs.rate, roundTripEff=inputs.eff, cost_install=inputs.costInstall, cost_OM_fix=inputs.costOM,
-                   initCharge=100.0)
+                   initCharge=0.0)
 
     # Grid Electricity Supply - All inputs are optional (default values shown below)
     grid = Grid(capacity=1000.0, maxEmissions=0.5, emissionCurve_hr=np.linspace(1, 24, 24),
@@ -69,10 +69,11 @@ if __name__ == '__main__':
 
     # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
     xls_filename = "inputs_sizing.xlsx"
-    sheetnames = ["CAES", "BATT", "UTES", "Flywheel"]
+    # sheetnames = ["CAES", "BATT", "UTES", "Flywheel"]
+    sheetnames = ["CAES"]
 
     # Specify number of iterations per case
-    iterations = 14  # To test
+    iterations = 1000  # To test
     # iterations = 100 # Used in article
 
     # Number of cores to use
