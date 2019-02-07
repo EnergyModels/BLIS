@@ -41,12 +41,17 @@ def parameterSweep(dataFile, solarCapacity, inputs, index):
     # Create power plant
         # 1 - create pandas series of power plant characteristics
     plant_inputs                = defaultInputs(plantType = 'CCGT') # Start with CCGT default inputs and then adjust to specific case
+    plant_inputs.plantType      = inputs.sheetname
     plant_inputs.Eff_A          = inputs.Eff_A
     plant_inputs.Eff_B          = inputs.Eff_B
     plant_inputs.Eff_C          = inputs.Eff_C
     plant_inputs.maxEfficiency  = inputs.maxEfficiency
     plant_inputs.rampRate       = inputs.rampRate
     plant_inputs.minRange       = inputs.minRange
+    plant_inputs.cost_install   = inputs.cost_install
+    plant_inputs.cost_OM_fix    = inputs.cost_OM_fix
+    plant_inputs.cost_OM_var    = inputs.cost_OM_var
+    plant_inputs.co2CaptureEff  = inputs.co2CaptureEff
     
         # 2 - create power plant
     plant        = PowerPlant(plant_inputs)
@@ -134,7 +139,7 @@ if __name__ == '__main__':
     
     # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
     xls_filename = "inputs_montecarlo1.xlsx"
-    sheetnames   = ["sCO2","OCGT","CCGT","sCO2_Batt","OCGT_Batt","CCGT_Batt"]
+    sheetnames   = ["sCO2","OCGT","CCGT","sCO2_CCS","CCGT_CCS"]
     
     # Specify number of iterations per case
     iterations = 10 # To test

@@ -73,7 +73,7 @@ if __name__ == '__main__':
     sheetnames = ["CAES"]
 
     # Specify number of iterations per case
-    iterations = 1000  # To test
+    iterations = 500  # To test
     # iterations = 100 # Used in article
 
     # Number of cores to use

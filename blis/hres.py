@@ -167,7 +167,9 @@ class HRES:
         #----------
         # Calculate Emissions
         #----------  
-        Emissions =  (gridUsed * dt * self.grid.getEmissions(datetimeUTC)) + (self.plant.heatInput / 60.0 * dt * self.fuel.emissions)
+        CO2_produced = (gridUsed * dt * self.grid.getEmissions(datetimeUTC)) + (self.plant.heatInput / 60.0 * dt * self.fuel.emissions)
+        CO2_captured = CO2_produced * (self.plant.co2CaptureEff / 100.0)
+        Emissions = CO2_produced - CO2_captured
         
         #----------
         # Update Battery

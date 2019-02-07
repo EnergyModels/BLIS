@@ -26,7 +26,9 @@ import pandas as pd
 #========================================================================
 def emptyInputs():
     # Create DataFrame
-    attributes = ['plantType','capacity','maxEfficiency','rampRate','minRange','startTime','stopTime','Eff_A','Eff_B','Eff_C']
+    attributes = ['plantType','capacity','maxEfficiency','rampRate','minRange','startTime','stopTime',
+                  'Eff_A','Eff_B','Eff_C',
+                  'cost_install','cost_OM_fix','cost_OM_var','co2CaptureEff']
     plant_inputs = pd.Series(index = attributes)
     return plant_inputs
 
@@ -50,6 +52,7 @@ def defaultInputs(plantType='CCGT'):
         plant_inputs.cost_install         = 1260.0      # ($/kW)
         plant_inputs.cost_OM_fix          = 11.11       # ($/kW/year)
         plant_inputs.cost_OM_var          = 3.54        # ($/MWh)
+        plant_inputs.co2CaptureEff        = 0.0         # Carbon Capture Efficiency (%)
         
     elif plantType == 'OCGT':  
         # Default values
@@ -66,6 +69,7 @@ def defaultInputs(plantType='CCGT'):
         plant_inputs.cost_install         = 750.0       # ($/kW)
         plant_inputs.cost_OM_fix          = 17.67       # ($/kW/year)
         plant_inputs.cost_OM_var          = 3.54        # ($/MWh)
+        plant_inputs.co2CaptureEff        = 0.0         # Carbon Capture Efficiency (%)
     
     # Return DataFrame
     return plant_inputs
@@ -88,11 +92,11 @@ class PowerPlant:
         self.Eff_A              = plant_inputs.Eff_A                 # Efficiency Curve Ax^2 + Bx + C
         self.Eff_B              = plant_inputs.Eff_B                 # -
         self.Eff_C              = plant_inputs.Eff_C                 # -
-        self.cost_install       = plant_inputs.cost_install      # ($/kW)
-        self.cost_OM_fix        = plant_inputs.cost_OM_fix       # ($/kW/year)
-        self.cost_OM_var        = plant_inputs.cost_OM_var       # ($/MWh)
-        
-        
+        self.cost_install       = plant_inputs.cost_install          # ($/kW)
+        self.cost_OM_fix        = plant_inputs.cost_OM_fix           # ($/kW/year)
+        self.cost_OM_var        = plant_inputs.cost_OM_var           # ($/MWh)
+        self.co2CaptureEff      = plant_inputs.co2CaptureEff         # Carbon Capture Efficiency (%)
+
         # Derived Characteristics
         self.minPowerRequest    = self.minRange/100.0 * self.capacity
         self.partLoadRange      = [plant_inputs.minRange/100.0,1.0]  # list (fractions)
