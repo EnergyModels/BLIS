@@ -22,12 +22,13 @@ from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES
 #=====================
 # Function to enable parameter sweep
 #=====================
-def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
+def parameterSweep(dataFile, plantSize, solarCapacity, battSize, inputs, index):
     # Record time to solve
     t0 = time.time()
     
     # Load_Data - Expected Columns (units): DatetimeUTC (UTC format), t (min), dt (min), demand (MW), solar (MW)
-    data         = pd.read_csv(dataFile) 
+    data         = pd.read_csv(dataFile)
+    df.loc[:,'solar'] = df.loc[:,'solar']*solarCapacity/32.3
     
     # Solar Plant - All inputs are optional (default values shown below)
     solar        = Solar(plantType = 'PV', capacity = solarCapacity, cost_install = 2004., cost_OM_fix = 22.02) 
@@ -52,6 +53,7 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
     plant_inputs.cost_OM_fix    = inputs.cost_OM_fix
     plant_inputs.cost_OM_var    = inputs.cost_OM_var
     plant_inputs.co2CaptureEff  = inputs.co2CaptureEff
+    plant_inputs.capacity       = plantSize  # MW
     
         # 2 - create power plant
     plant        = PowerPlant(plant_inputs)
@@ -72,16 +74,17 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
         hres.save(casename=casename)
 
     # Combine inputs and results into output and then return
+    s_plantCapacity = pd.Series([plantSize], index=['plantCapacity_MW'])
     s_solarCapacity = pd.Series([solarCapacity],index=['solarCapacity_MW'])
     s_battSize = pd.Series([battSize], index=['battSize_MW'])
-    output = pd.concat([inputs,s_solarCapacity,s_battSize,results],axis=0)
+    output = pd.concat([inputs,s_plantCapacity,s_solarCapacity,s_battSize,results],axis=0)
     return output
 
 #=============================================================================#
 # Create MonteCarlo Inputs
 # Note: iterations must be an integer
 #=============================================================================#
-def monteCarloInputs(filename,sheetname,iterations):
+def designInputs(filename,sheetname):
     # Read Excel with inputs
     df_xls = pd.read_excel(filename, sheet_name=sheetname, index_col = 0)
     
@@ -93,38 +96,8 @@ def monteCarloInputs(filename,sheetname,iterations):
     
     # Create Inputs
     for param in parameters1:
-        
-        dist_type = df_xls.loc[param]["Distribution"]
-        
-        # Constants
-        if dist_type == "constant" or dist_type == "Constant" or dist_type == "C":
-            avg                = df_xls.loc[param]["Average"] 
-            df.loc[:][param] = avg
-        
-        # Uniform Distributions
-        elif dist_type == "uniform" or dist_type == "Uniform" or dist_type == "U":
-            low               = df_xls.loc[param]["Low"] 
-            high              = df_xls.loc[param]["High"] 
-            df.loc[:][param] = np.random.uniform(low=low,   high=high, size=iterations)
-            
-        # Normal Distributions
-        elif dist_type == "normal" or dist_type == "Normal" or dist_type == "N":
-            avg                = df_xls.loc[param]["Average"] 
-            stdev              = df_xls.loc[param]["Stdev"] 
-            df.loc[:][param]  = np.random.normal(loc=avg,   scale=stdev, size=iterations)
+        df.loc[:][param] = df_xls.loc[param]["Average"]
 
-        # LogNormal Distributions
-        elif dist_type == "lognormal" or dist_type == "Lognormal" or dist_type == "LN":
-            avg                = df_xls.loc[param]["Average"] 
-            stdev              = df_xls.loc[param]["Stdev"] 
-            df.loc[:][param]  = np.random.lognormal(mean=avg,   sigma=stdev, size=iterations)
-        
-        # Traingular Distributions
-        elif dist_type == "triangle" or dist_type == "Triangle" or dist_type == "T":
-            left               = df_xls.loc[param]["Low"] 
-            mode                = df_xls.loc[param]["Average"] 
-            right              = df_xls.loc[param]["High"] 
-            df.loc[:][param]  = np.random.triangular(left,mode,right, size=iterations)
     df.loc[:,'sheetname'] = sheetname
     return df
 
@@ -136,27 +109,50 @@ if __name__ == '__main__':
     #==============
     # User Inputs
     #==============
-    studyName = "Results_MonteCarlo1"
+    studyName = "Results_DesignSweep"
     
     # Data files (Demand and solar data)
-    # dataFiles = ["data001.csv","data063.csv"] # Entire Year (used in article)
-    dataFiles = ["data001_July.csv", "data063_July.csv"]  # Single Month
-#     dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
-    solarCapacities = [0.513,32.3]  # (MW) Needs to be the same length as dataFiles
+    # dataFile = ["data063.csv"] # Entire Year (used in article)
+    # dataFile = [ "data063_July.csv"]  # Single Month
+    dataFile = ["data063_Oct30th.csv"]  # Single Day
 
-    # Battery Sizes to investigate [1:1, MW:MWh]
-    battSizes = [0, 30.0]
+    # Design Sweep
+    solarCapacities = np.linspace(30,300,10)
+    battSizes = np.linspace(0,270,10) # Battery Sizes to investigate [1:1, MW:MWh]
+    plantSizes = np.linspace(10,55,10)
 
     # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
     xls_filename = "inputs_montecarlo1.xlsx"
     sheetnames   = ["sCO2","OCGT","CCGT","sCO2_CCS","CCGT_CCS"]
     
     # Specify number of iterations per case
-    iterations = 50 # To test
+    iterations = 1 # To test
     # iterations = 100 # Used in article
     
     # Number of cores to use
     num_cores = multiprocessing.cpu_count()-1 # Consider saving one for other processes
+    
+    
+    
+    
+     ##########
+    # GET TO RUN IN PARALLEL!!!!!
+    #####
+    count = 0
+    cols = ['plantSize','solarCapacity','battSize']
+    inputs2 = pd.DataFrame(columns=cols)
+    # Iterate data files and corresponding solar capacity
+    for plantSize in plantSizes:
+        for solarCapacity in solarCapacities:
+            for battSize in battSizes:
+                s = pd.Series([plantSize,solarCapacity,battSize], index=cols)
+                s.name = count
+                inputs2 = inputs2.append(s)
+    
+    
+    ##########
+    # GET TO RUN IN PARALLEL!!!!!
+    #####
     
     #==============
     # Run Simulations
@@ -167,25 +163,28 @@ if __name__ == '__main__':
     # Iterate each Monte Carlo case
     for sheetname in sheetnames:
     
-        inputs = monteCarloInputs(xls_filename,sheetname,iterations)
-        
+        inputs = designInputs(xls_filename,sheetname)
+
         # Iterate data files and corresponding solar capacity
-        for (dataFile,solarCapacity) in zip(dataFiles,solarCapacities):
+        for plantSize in plantSizes:
 
             # Iterate data files and corresponding solar capacity
-            for battSize in battSizes:
+            for solarCapacity in solarCapacities:
 
-                # Perform Simulations (Run all plant variations in parallel)
-                with parallel_backend('multiprocessing', n_jobs=num_cores):
-                    output = Parallel(verbose=10)(delayed(parameterSweep)(dataFile, solarCapacity, battSize, inputs.loc[index],index) for index in range(iterations))
+                # Iterate data files and corresponding solar capacity
+                for battSize in battSizes:
 
-                # Add output to all_outputs
-                all_outputs = all_outputs + output
-                # Move output to dataframe and save (if iterations greater than 10)
-                if iterations > 10:
-                    df = pd.DataFrame(output)
-                    df.to_csv(studyName + '_pt' + str(count)+'.csv')
-                    count = count + 1
+                    # Perform Simulations (Run all plant variations in parallel)
+                    with parallel_backend('multiprocessing', n_jobs=num_cores):
+                        output = Parallel(verbose=10)(delayed(parameterSweep)(dataFile, plantSize, solarCapacity, battSize, inputs.loc[index],index) for index in range(iterations))
+
+                    # Add output to all_outputs
+                    all_outputs = all_outputs + output
+
+        # Back-up results for current plantType
+        df = pd.DataFrame(all_outputs)
+        df.to_csv(studyName + '_pt' + str(count)+'.csv')
+        count = count + 1
             
     # Combine outputs into single dataframe and save
     df = pd.DataFrame(all_outputs)

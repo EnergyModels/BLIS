@@ -53,7 +53,7 @@ class HRES:
         rows = range(self.steps)
         cols = ['PowerRequest','PowerOutput','PowerRamp','HeatInput','Efficiency',
                 'battCharge','battIncrease','battDecrease','battDischargeRate','battChargeRate','battRamp',
-                'solarUsed','loadShed','deficit','gridUsed','Emissions']
+                'solarUsed','loadShed','deficit','gridUsed','CO2_produced','CO2_captured','Emissions']
         self.perf = pd.DataFrame(data=0.0,index=rows,columns = cols)
         
         #----
@@ -212,7 +212,7 @@ class HRES:
         #=======
         attributes = ['PowerRequest','PowerOutput','PowerRamp','HeatInput','Efficiency',
                 'battCharge','battIncrease','battDecrease','battDischargeRate','battChargeRate','battRamp',
-                'solarUsed','loadShed','deficit','gridUsed','Emissions']
+                'solarUsed','loadShed','deficit','gridUsed','CO2_produced','CO2_captured','Emissions']
         perf = pd.Series(index = attributes)
         
         # Power plant
@@ -233,6 +233,8 @@ class HRES:
         perf.loadShed       = loadShed
         perf.deficit        = deficit
         perf.gridUsed       = gridUsed
+        perf.CO2_produced   = CO2_produced
+        perf.CO2_captured   = CO2_captured
         perf.Emissions      = Emissions
         
         return perf

@@ -14,7 +14,7 @@ df = pd.read_csv(results_filename)
 
 # Prepare results for plotting
 # Create series for plantType
-labels = {'OCGT': '$OCGT$','OCGT_Batt': '$OCGT$','CCGT': '$CCGT$','CCGT_Batt': '$CCGT$','sCO2': '$sCO_2$','sCO2_Batt': '$sCO_2$'}
+labels = {'OCGT': '$OCGT$','CCGT': '$CCGT$','sCO2': '$sCO_2$','sCO2_CCS': '$sCO_2+CCS$', 'CCGT_CCS': '$CCGT+CCS$',}
 df = df.assign(plantType=df.sheetname)
 for key in labels.keys():
     df.loc[(df.plantType == key), 'plantType'] = labels[key]
@@ -32,7 +32,7 @@ df2.loc[:,'emissions_tons'] = df2.loc[:,'emissions_tons'] / 1000.0
 
 
 # Version 1
-g = sns.FacetGrid(df2,col="battSize",row="pct_solar",hue="plantType")
+g = sns.FacetGrid(df2,col="battSize_MW",row="pct_solar",hue="plantType")
 g = (g.map(plt.scatter, "LCOE", "emissions_tons", edgecolor="w").add_legend())
 g.set_axis_labels("LCOE (US Dollars)", "Emissions (MTons)")
 g.savefig('Fig12_Emissions_vs_LCOE_V1.png')
@@ -43,10 +43,9 @@ g = (g.map(plt.scatter, "LCOE", "emissions_tons", edgecolor="w").add_legend())
 g.set_axis_labels("LCOE (US Dollars)", "Emissions (MTons)")
 g.savefig('Fig12_Emissions_vs_LCOE_V2.png')
 
-
 # Version 3
 sns.set_style("darkgrid")
-g = sns.FacetGrid(df2,col="battSize",row="pct_solar",hue="plantType",despine=True)
+g = sns.FacetGrid(df2,col="battSize_MW",row="pct_solar",hue="plantType",despine=True)
 g = (g.map(plt.hist, "emissions_tons",histtype="step",linewidth=3).add_legend())
 g.set(ylim=(0,25))
 g.set_axis_labels("Emissions (MTons)")
