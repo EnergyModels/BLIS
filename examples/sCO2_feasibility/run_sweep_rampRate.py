@@ -70,7 +70,7 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, rampRate,index):
     inputs = inputs.drop('rampRate')
     s_solarCapacity = pd.Series([solarCapacity],index=['solarCapacity_MW'])
     s_battSize = pd.Series([battSize], index=['battSize_MW'])
-    s_rampRate = pd.Series([solarCapacity], index=['rampRate'])
+    s_rampRate = pd.Series([rampRate], index=['rampRate'])
     output = pd.concat([inputs, s_solarCapacity, s_battSize, s_rampRate, results], axis=0)
     return output
 
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 
     # Specify number of iterations per case
     # iterations = 10  # To test
-    iterations = 16 # Used in article
+    iterations = 31 # Used in article
 
     # Ramp Rates to investigate [1:1, MW:MWh]
     rampRates = np.linspace(1,30,iterations)

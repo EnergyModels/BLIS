@@ -98,7 +98,6 @@ if __name__ == '__main__':
     # Specify number of iterations per case
     # iterations = 10 # To test
     iterations = 100 # Used in article
-    
     # Number of cores to use
     num_cores = multiprocessing.cpu_count()-1 # Consider saving one for other processes
     

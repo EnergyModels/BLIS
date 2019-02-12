@@ -84,8 +84,8 @@ if __name__ == '__main__':
     
     # Data files (Demand and solar data)
     # dataFile = "data063.csv" # Entire Year (used in article)
-    # dataFile = "data063_Oct30th_July.csv"  # Single Day
-    dataFile = "data063_Oct30th.csv" # Single Day
+    dataFile = "data063_July.csv"  # Single Day
+    # dataFile = "data063_Oct30th.csv" # Single Day
     solarCapacity = 32.3  # (MW) Needs to be the same length as dataFiles
 
     # Specify number of iterations per case

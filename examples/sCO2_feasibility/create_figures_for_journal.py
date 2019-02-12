@@ -27,7 +27,7 @@ DPI = 1000
 
 #%%=============================================================================#
 # Figure 6 - LCOE
-results_filename = "Results_MonteCarlo1.csv"
+results_filename = "results_monte_carlo.csv"
 savename = "Fig6_LCOE.png"
 #=============================================================================#
 # Import results
@@ -49,7 +49,7 @@ f,a = plt.subplots(2,2,sharex=True, sharey=True )
 a = a.ravel()
 
 # Collect statistics
-labels = ['plantType','battSize','pct_solar','min','avg','max']
+labels = ['plantType','battSize_MW','pct_solar','min','avg','max']
 stats = []
 
 for idx,ax in enumerate(a):
@@ -86,7 +86,7 @@ for idx,ax in enumerate(a):
             color = colors[2]
             label = 'CCGT'
         # Plot
-        df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize == battSize)]
+        df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
         
         bin_size = 0.001; min_edge = 0.06; max_edge = 0.14
 #        bin_size = 0.001; min_edge = 0.02; max_edge = 0.14
@@ -130,7 +130,7 @@ df_stats = pd.DataFrame(stats)
 
 #%%=============================================================================#
 # Figure 7 - sCO2 Sensitivity
-results_filename = "Results_MonteCarlo1.csv"
+results_filename = "results_monte_carlo.csv"
 savename = "Fig7_sCO2_Sensitivity.png"
 #=============================================================================#
 # Import results
@@ -203,7 +203,7 @@ for idx,ax in enumerate(a):
     for plantType,battSize,pct_solar,label,dot_color,marker in zip(plantTypes,battSizes,pct_solars,labels,dot_colors,markers):
 
         # Select entries of interest
-        df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize == battSize)]
+        df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
         
         # Plot
         x = df2.loc[:,x_var]*x_convert
@@ -212,7 +212,7 @@ for idx,ax in enumerate(a):
     
     # Set X and Y Limits
     ax.set_xlim(left=xlims[0],right=xlims[1])
-    ax.set_ylim(bottom=ylims[0],top=ylims[1])
+#    ax.set_ylim(bottom=ylims[0],top=ylims[1])
     
     # X-axis Labels (Only bottom)
     if idx ==3 or idx==4 or idx==5:
@@ -242,14 +242,16 @@ plt.savefig(savename,dpi=DPI,bbox_inches="tight")
 plt.close()
 #%%=============================================================================#
 # Figure 8 - Ramp Rate Sensitivity
-results_filename1 = "Results_MonteCarlo2.csv"  # 63% solar
-results_filename2 = "Results_MonteCarlo3.csv"  # 1% solar
+results_filename = "results_sweep_rampRate.csv"  # 63% solar
+#results_filename2 = "Results_MonteCarlo3.csv"  # 1% solar
 savename = "Fig8_RampRate_Deficit.png"
 #=============================================================================#
 # Import results
-df1 = pd.read_csv(results_filename1)
-df2 = pd.read_csv(results_filename2)
-df = pd.concat([df1,df2],axis=0)
+#df1 = pd.read_csv(results_filename1)
+#df2 = pd.read_csv(results_filename2)
+#df = pd.concat([df1,df2],axis=0)
+
+df = pd.read_csv(results_filename)
 
 # Prepare results for plotting
     # Create series for pct_solar
@@ -273,7 +275,7 @@ x_convert = [1.0]
 xlims = [0,30]
 
 #  Configurations
-plantTypes = ['sCO2_Ramp0','sCO2_Ramp0','sCO2_Ramp1']
+plantTypes = ['sCO2','sCO2','sCO2']
 battSizes   = [0.0,0.0,30.0]
 pct_solars  = [1.0,63.0,63.0]
 # Corresponding labels, colors, and marker size
@@ -285,7 +287,7 @@ markers    = ['o','x','+']
 for plantType,battSize,pct_solar,label,dot_color,marker in zip(plantTypes,battSizes,pct_solars,labels,dot_colors,markers):
 
     # Select entries of interest
-    df2 = df[(df.sheetname == plantType) &(df.pct_solar == pct_solar) & (df.battSize == battSize)]
+    df2 = df[(df.sheetname == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
     
     # Plot
     x = df2.loc[:,x_var]*x_convert
@@ -293,8 +295,8 @@ for plantType,battSize,pct_solar,label,dot_color,marker in zip(plantTypes,battSi
     ax.scatter(x.values,y.values,c=dot_color,marker=marker,label=label)
 
 # Set X and Y Limits
-ax.set_xlim(left=xlims[0],right=xlims[1])
-ax.set_ylim(bottom=ylims[0],top=ylims[1])
+#ax.set_xlim(left=xlims[0],right=xlims[1])
+#ax.set_ylim(bottom=ylims[0],top=ylims[1])
 
 # X-axis Labels
 ax.set_xlabel(x_label)
@@ -318,7 +320,7 @@ results_filename = "Results_SampleDay_Oct30th_sCO2.csv"
 savename = "Fig9_ControlScheme.png"
 #=============================================================================#
 # Customize Time Shown
-file_t_start  = -4.0
+#file_t_start  = -4.0
 t_start = 7.0
 t_end   = 22.0
 
@@ -328,7 +330,7 @@ df = pd.read_csv(results_filename)
 for n in range(3):
 #   if n<3 :
 #      plt.tick_params(labelbottom='off')
-    x = df.loc[:,'t']/60.0 - df.loc[0,'t']/60.0 + file_t_start
+    x = df.index/60.0# - df.loc[0,'t']/60.0 + file_t_start
     if n ==0:
 #       x = df.loc[:,'t']
        y1 = df.loc[:,'PowerOutput']
@@ -407,7 +409,7 @@ plt.close()
 
 #%%=============================================================================#
 # Figure 10 - Curtailment
-results_filename = "Results_MonteCarlo1.csv"
+results_filename = "results_monte_carlo.csv"
 savename = "Fig10_Curtailment.png"
 #=============================================================================#
 # Import results
@@ -416,9 +418,9 @@ df = pd.read_csv(results_filename)
 # Prepare results for plotting
     # Create series for plantType
 df = df.assign(plantType=df.sheetname)
-df.loc[(df.plantType == 'OCGT_Batt'),'plantType']='OCGT'
-df.loc[(df.plantType == 'CCGT_Batt'),'plantType']='CCGT'
-df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
+#df.loc[(df.plantType == 'OCGT_Batt'),'plantType']='OCGT'
+#df.loc[(df.plantType == 'CCGT_Batt'),'plantType']='CCGT'
+#df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
 df.loc[(df.pct_solar == 0.513),'pct_solar']=1.0
@@ -468,7 +470,7 @@ for idx,ax in enumerate(a):
         # Plot
         
         # Access Data
-        df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize == battSize)]
+        df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
         
         # Set Bin Size
         bin_size =2.0; min_edge = 0.0; max_edge = 60.0
@@ -499,7 +501,7 @@ plt.close()
 
 #%%=============================================================================#
 # Figure 11 - Impact of battery size
-results_filename = "Results_MonteCarlo2.csv"
+results_filename = "results_sweep_battSize.csv"
 savename = "Fig11_BatterySize.png"
 #=============================================================================#
 # Import results
@@ -508,9 +510,9 @@ df = pd.read_csv(results_filename)
 # Prepare results for plotting
     # Create series for plantType
 df = df.assign(plantType=df.sheetname)
-df.loc[(df.plantType == 'OCGT_Batt'),'plantType']='OCGT'
-df.loc[(df.plantType == 'CCGT_Batt'),'plantType']='CCGT'
-df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
+#df.loc[(df.plantType == 'OCGT_Batt'),'plantType']='OCGT'
+#df.loc[(df.plantType == 'CCGT_Batt'),'plantType']='CCGT'
+#df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
 df.loc[(df.pct_solar == 0.513),'pct_solar']=1.0
@@ -550,7 +552,7 @@ for idx,ax in enumerate(a):
         
         
     #  Configurations
-    plantTypes  = ['sCO2_Batt30','sCO2_Batt40','sCO2_Batt50']
+    plantTypes  = ['sCO2','sCO2','sCO2']
     pct_solars  = [63.0,63.0,63.0]
     minLoads    = [30.,40.,50.]
     # Corresponding labels, colors, and marker size
@@ -612,3 +614,50 @@ for idx,ax in enumerate(a):
 # Save Figure
 plt.savefig(savename,dpi=DPI,bbox_inches="tight")
 plt.close()
+
+
+
+#%%=============================================================================#
+# Figure 12 and 13 - Time of Day Emissions and Costs
+results_filename = "results_monte_carlo.csv"
+savename_emissions = "Fig12_TOD_Emissions.png"
+savename_costs = "Fig13_TOD_Costs.png"
+#=============================================================================#
+sns.set_style("darkgrid")
+
+df_raw = pd.read_csv(results_filename)
+
+# Create series for plantType
+labels = {'OCGT': '$OCGT$','CCGT': '$CCGT$','sCO2': '$sCO_2$','sCO2_CCS': '$sCO_2+CCS$', 'CCGT_CCS': '$CCGT+CCS$',}
+df_raw = df_raw.assign(plantType=df_raw.sheetname)
+for key in labels.keys():
+    df_raw.loc[(df_raw.plantType == key), 'Plant'] = labels[key]
+
+# Filter Results
+df = df_raw[(df_raw.LCOE > 0) & (df_raw.emissions_tons > 0) & (df_raw.gridUsed_MWh < 0.01)]
+
+# Wide to long
+df['id'] = df.index
+df2 = pd.wide_to_long(df, stubnames=['emissions_hr','demand_hr','costs_hr'], i=['sheetname','id'], j='hr')
+df3 = df2.reset_index()
+
+# Normalize emisssions and costs by demand
+df3.loc[:,'emissions_hr'] = df3.loc[:,'emissions_hr'] / df3.loc[:,'demand_hr']
+df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ df3.loc[:,'demand_hr']
+
+# Convert costs from $/MWh to $/kWh
+df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ 1000.0
+
+# Emissions Plot
+plt.figure()
+ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=df3)
+ax.set_xlabel('Time of Day (hr)')
+ax.set_ylabel('Emissions (ton/kWh)')
+plt.savefig(savename_emissions,dpi=DPI)
+
+# Costs Plot
+plt.figure()
+ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=df3)
+ax.set_xlabel('Time of Day (hr)')
+ax.set_ylabel('Fuel Costs ($/kWh)')
+plt.savefig(savename_costs,dpi=DPI)
