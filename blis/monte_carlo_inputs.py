@@ -3,7 +3,7 @@
 BLIS - Balancing Load of Intermittent Solar:
 A characteristic-based transient power plant model
 
-Copyright (C) 2018. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
+Copyright (C) 2019. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -20,7 +20,7 @@ import numpy as np
 # =============================================================================#
 def monteCarloInputs(filename, sheetname, iterations):
     # Read Excel with inputs
-    df_xls = pd.read_excel(filename, sheetname=sheetname, index_col=0)
+    df_xls = pd.read_excel(filename, sheet_name=sheetname, index_col=0)
 
     # Create Dataframe to hold inputs
     rows = range(iterations)
@@ -36,31 +36,31 @@ def monteCarloInputs(filename, sheetname, iterations):
         # Constants
         if dist_type == "constant" or dist_type == "Constant" or dist_type == "C":
             avg = df_xls.loc[param]["Average"]
-            df.loc[:,param] = avg
+            df.loc[:][param] = avg
 
         # Uniform Distributions
         elif dist_type == "uniform" or dist_type == "Uniform" or dist_type == "U":
             low = df_xls.loc[param]["Low"]
             high = df_xls.loc[param]["High"]
-            df.loc[:,param] = np.random.uniform(low=low, high=high, size=iterations)
+            df.loc[:][param] = np.random.uniform(low=low, high=high, size=iterations)
 
         # Normal Distributions
         elif dist_type == "normal" or dist_type == "Normal" or dist_type == "N":
             avg = df_xls.loc[param]["Average"]
             stdev = df_xls.loc[param]["Stdev"]
-            df.loc[:,param] = np.random.normal(loc=avg, scale=stdev, size=iterations)
+            df.loc[:][param] = np.random.normal(loc=avg, scale=stdev, size=iterations)
 
         # LogNormal Distributions
         elif dist_type == "lognormal" or dist_type == "Lognormal" or dist_type == "LN":
             avg = df_xls.loc[param]["Average"]
             stdev = df_xls.loc[param]["Stdev"]
-            df.loc[:,param] = np.random.lognormal(mean=avg, sigma=stdev, size=iterations)
+            df.loc[:][param] = np.random.lognormal(mean=avg, sigma=stdev, size=iterations)
 
         # Traingular Distributions
         elif dist_type == "triangle" or dist_type == "Triangle" or dist_type == "T":
             left = df_xls.loc[param]["Low"]
             mode = df_xls.loc[param]["Average"]
             right = df_xls.loc[param]["High"]
-            df.loc[:,param] = np.random.triangular(left, mode, right, size=iterations)
-    df.sheetname = sheetname
+            df.loc[:][param] = np.random.triangular(left, mode, right, size=iterations)
+    df.loc[:, 'sheetname'] = sheetname
     return df

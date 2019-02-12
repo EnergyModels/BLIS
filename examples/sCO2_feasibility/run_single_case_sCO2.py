@@ -28,7 +28,7 @@ data = pd.read_csv(filename)
 solar = Solar(plantType = 'PV', capacity = 32.3, cost_install = 2004., cost_OM_fix = 22.02)
 
 # Battery Storage - All inputs are optional (default values shown below)
-batt = Battery(capacity = 30.0, rateMax= 30.0, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6)
+batt = Battery(capacity = 30.0, rateMax= 30.0, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 0.0)
 
 # Fuel - All inputs are optional (default values shown below)
 fuel = Fuel(fuelType='NATGAS',cost = 23.27,emissions = 0.18)
@@ -59,6 +59,7 @@ hres.plot_EBalance(caseName = saveName)
 hres.plot_efficiency(caseName = saveName)
 hres.plot_pwrRamps(caseName = saveName)
 hres.save(saveName)
+results.to_csv(saveName+'_Analysis.csv')
 
 # Display Elapsed Time
 t1 = time.time()

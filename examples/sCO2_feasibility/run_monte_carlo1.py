@@ -3,7 +3,7 @@
 BLIS - Balancing Load of Intermittent Solar:
 A characteristic-based transient power plant model
 
-Copyright (C) 2018. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
+Copyright (C) 2019. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -17,7 +17,7 @@ import time
 import numpy as np
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
-from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES
+from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES, monteCarloInputs
 
 #=====================
 # Function to enable parameter sweep
@@ -33,7 +33,7 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
     solar        = Solar(plantType = 'PV', capacity = solarCapacity, cost_install = 2004., cost_OM_fix = 22.02) 
     
     # Battery Storage - All inputs are optional (default values shown below)
-    batt         = Battery(capacity = battSize, rateMax= battSize, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6)
+    batt         = Battery(capacity = battSize, rateMax= battSize, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 100.0)
     
     # Fuel - All inputs are optional (default values shown below)
     fuel         = Fuel(fuelType='NATGAS',cost = 23.27,emissions = 0.18)
@@ -77,57 +77,6 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
     output = pd.concat([inputs,s_solarCapacity,s_battSize,results],axis=0)
     return output
 
-#=============================================================================#
-# Create MonteCarlo Inputs
-# Note: iterations must be an integer
-#=============================================================================#
-def monteCarloInputs(filename,sheetname,iterations):
-    # Read Excel with inputs
-    df_xls = pd.read_excel(filename, sheet_name=sheetname, index_col = 0)
-    
-    # Create Dataframe to hold inputs
-    rows = range(iterations)
-    parameters1 = df_xls.index.values
-    parameters2 = np.append('sheetname',parameters1)
-    df = pd.DataFrame(data=0.0,index=rows,columns = parameters2)
-    
-    # Create Inputs
-    for param in parameters1:
-        
-        dist_type = df_xls.loc[param]["Distribution"]
-        
-        # Constants
-        if dist_type == "constant" or dist_type == "Constant" or dist_type == "C":
-            avg                = df_xls.loc[param]["Average"] 
-            df.loc[:][param] = avg
-        
-        # Uniform Distributions
-        elif dist_type == "uniform" or dist_type == "Uniform" or dist_type == "U":
-            low               = df_xls.loc[param]["Low"] 
-            high              = df_xls.loc[param]["High"] 
-            df.loc[:][param] = np.random.uniform(low=low,   high=high, size=iterations)
-            
-        # Normal Distributions
-        elif dist_type == "normal" or dist_type == "Normal" or dist_type == "N":
-            avg                = df_xls.loc[param]["Average"] 
-            stdev              = df_xls.loc[param]["Stdev"] 
-            df.loc[:][param]  = np.random.normal(loc=avg,   scale=stdev, size=iterations)
-
-        # LogNormal Distributions
-        elif dist_type == "lognormal" or dist_type == "Lognormal" or dist_type == "LN":
-            avg                = df_xls.loc[param]["Average"] 
-            stdev              = df_xls.loc[param]["Stdev"] 
-            df.loc[:][param]  = np.random.lognormal(mean=avg,   sigma=stdev, size=iterations)
-        
-        # Traingular Distributions
-        elif dist_type == "triangle" or dist_type == "Triangle" or dist_type == "T":
-            left               = df_xls.loc[param]["Low"] 
-            mode                = df_xls.loc[param]["Average"] 
-            right              = df_xls.loc[param]["High"] 
-            df.loc[:][param]  = np.random.triangular(left,mode,right, size=iterations)
-    df.loc[:,'sheetname'] = sheetname
-    return df
-
 #=====================
 # Main Program
 #=====================
@@ -140,8 +89,7 @@ if __name__ == '__main__':
     
     # Data files (Demand and solar data)
     # dataFiles = ["data001.csv","data063.csv"] # Entire Year (used in article)
-    dataFiles = ["data001_July.csv", "data063_July.csv"]  # Single Month
-#     dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
+    dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
     solarCapacities = [0.513,32.3]  # (MW) Needs to be the same length as dataFiles
 
     # Battery Sizes to investigate [1:1, MW:MWh]
@@ -152,7 +100,7 @@ if __name__ == '__main__':
     sheetnames   = ["sCO2","OCGT","CCGT","sCO2_CCS","CCGT_CCS"]
     
     # Specify number of iterations per case
-    iterations = 50 # To test
+    iterations = 25 # To test
     # iterations = 100 # Used in article
     
     # Number of cores to use

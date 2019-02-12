@@ -3,7 +3,7 @@
 BLIS - Balancing Load of Intermittent Solar:
 A characteristic-based transient power plant model
 
-Copyright (C) 2018. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
+Copyright (C) 2019. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -22,19 +22,19 @@ from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES
 #=====================
 # Function to enable parameter sweep
 #=====================
-def parameterSweep(dataFile, plantSize, solarCapacity, battSize, inputs, index):
+def parameterSweep(dataFile, inputs, inputs2, index):
     # Record time to solve
     t0 = time.time()
     
     # Load_Data - Expected Columns (units): DatetimeUTC (UTC format), t (min), dt (min), demand (MW), solar (MW)
     data         = pd.read_csv(dataFile)
-    df.loc[:,'solar'] = df.loc[:,'solar']*solarCapacity/32.3
+    data.loc[:,'solar'] = data.loc[:,'solar']*inputs2.solarCapacity/32.3
     
     # Solar Plant - All inputs are optional (default values shown below)
-    solar        = Solar(plantType = 'PV', capacity = solarCapacity, cost_install = 2004., cost_OM_fix = 22.02) 
+    solar        = Solar(plantType = 'PV', capacity = inputs2.solarCapacity, cost_install = 2004., cost_OM_fix = 22.02)
     
     # Battery Storage - All inputs are optional (default values shown below)
-    batt         = Battery(capacity = battSize, rateMax= battSize, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6)
+    batt         = Battery(capacity = inputs2.battSize, rateMax= inputs2.battSize, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 100.0)
     
     # Fuel - All inputs are optional (default values shown below)
     fuel         = Fuel(fuelType='NATGAS',cost = 23.27,emissions = 0.18)
@@ -53,7 +53,7 @@ def parameterSweep(dataFile, plantSize, solarCapacity, battSize, inputs, index):
     plant_inputs.cost_OM_fix    = inputs.cost_OM_fix
     plant_inputs.cost_OM_var    = inputs.cost_OM_var
     plant_inputs.co2CaptureEff  = inputs.co2CaptureEff
-    plant_inputs.capacity       = plantSize  # MW
+    plant_inputs.capacity       = inputs2.plantSize  # MW
     
         # 2 - create power plant
     plant        = PowerPlant(plant_inputs)
@@ -70,14 +70,11 @@ def parameterSweep(dataFile, plantSize, solarCapacity, battSize, inputs, index):
 
     # Save simulation results
     if index==0:
-        casename = inputs.sheetname + '_PV' + str(solarCapacity) + '_Batt' + str(battSize)
+        casename = inputs.sheetname + '_PV' + str(inputs2.solarCapacity) + '_Batt' + str(inputs2.battSize)
         hres.save(casename=casename)
 
     # Combine inputs and results into output and then return
-    s_plantCapacity = pd.Series([plantSize], index=['plantCapacity_MW'])
-    s_solarCapacity = pd.Series([solarCapacity],index=['solarCapacity_MW'])
-    s_battSize = pd.Series([battSize], index=['battSize_MW'])
-    output = pd.concat([inputs,s_plantCapacity,s_solarCapacity,s_battSize,results],axis=0)
+    output = pd.concat([inputs,inputs2,results],axis=0)
     return output
 
 #=============================================================================#
@@ -88,18 +85,17 @@ def designInputs(filename,sheetname):
     # Read Excel with inputs
     df_xls = pd.read_excel(filename, sheet_name=sheetname, index_col = 0)
     
-    # Create Dataframe to hold inputs
-    rows = range(iterations)
+    # Create series to hold inputs
     parameters1 = df_xls.index.values
     parameters2 = np.append('sheetname',parameters1)
-    df = pd.DataFrame(data=0.0,index=rows,columns = parameters2)
+    s = pd.Series(data=0.0,index=parameters2)
     
     # Create Inputs
     for param in parameters1:
-        df.loc[:][param] = df_xls.loc[param]["Average"]
+        s.loc[param] = df_xls.loc[param]["Average"]
 
-    df.loc[:,'sheetname'] = sheetname
-    return df
+    s.loc['sheetname'] = sheetname
+    return s
 
 #=====================
 # Main Program
@@ -109,77 +105,60 @@ if __name__ == '__main__':
     #==============
     # User Inputs
     #==============
-    studyName = "Results_DesignSweep"
+    studyName = "results_system_sizing"
     
     # Data files (Demand and solar data)
-    # dataFile = ["data063.csv"] # Entire Year (used in article)
-    # dataFile = [ "data063_July.csv"]  # Single Month
-    dataFile = ["data063_Oct30th.csv"]  # Single Day
+    # dataFile = "data063.csv" # Entire Year (used in article)
+    # dataFile = "data063_July.csv" # Single Month
+    dataFile = "data063_Oct30th.csv"  # Single Day
 
     # Design Sweep
     solarCapacities = np.linspace(30,300,10)
-    battSizes = np.linspace(0,270,10) # Battery Sizes to investigate [1:1, MW:MWh]
-    plantSizes = np.linspace(10,55,10)
+    battSizes = np.linspace(0,360,13) # Battery Sizes to investigate [1:1, MW:MWh]
+    plantSizes = np.linspace(40,52,7)
 
     # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
-    xls_filename = "inputs_montecarlo1.xlsx"
+    xls_filename = "inputs_system_sizing.xlsx"
     sheetnames   = ["sCO2","OCGT","CCGT","sCO2_CCS","CCGT_CCS"]
-    
-    # Specify number of iterations per case
-    iterations = 1 # To test
-    # iterations = 100 # Used in article
-    
+    # sheetnames = ["sCO2"]#, "OCGT", "CCGT", "sCO2_CCS", "CCGT_CCS"]
+
     # Number of cores to use
     num_cores = multiprocessing.cpu_count()-1 # Consider saving one for other processes
-    
-    
-    
-    
-     ##########
-    # GET TO RUN IN PARALLEL!!!!!
-    #####
+
+    #==============
+    # Run Simulations
+    #==============
+    all_outputs = []
+
+    # ------
+    # Design Sweep Inputs
+    # ------
     count = 0
-    cols = ['plantSize','solarCapacity','battSize']
+    cols = ['plantSize', 'solarCapacity', 'battSize']
     inputs2 = pd.DataFrame(columns=cols)
     # Iterate data files and corresponding solar capacity
     for plantSize in plantSizes:
         for solarCapacity in solarCapacities:
             for battSize in battSizes:
-                s = pd.Series([plantSize,solarCapacity,battSize], index=cols)
+                s = pd.Series([plantSize, solarCapacity, battSize], index=cols)
                 s.name = count
+                count = count + 1
                 inputs2 = inputs2.append(s)
-    
-    
-    ##########
-    # GET TO RUN IN PARALLEL!!!!!
-    #####
-    
-    #==============
-    # Run Simulations
-    #==============
-    all_outputs = []
-    count = 0
-    
+    n_cases = inputs2.shape[0]
+
+    # ------
     # Iterate each Monte Carlo case
+    # ------
     for sheetname in sheetnames:
     
         inputs = designInputs(xls_filename,sheetname)
 
-        # Iterate data files and corresponding solar capacity
-        for plantSize in plantSizes:
+        # Perform Simulations (Run all plant variations in parallel)
+        with parallel_backend('multiprocessing', n_jobs=num_cores):
+            output = Parallel(verbose=10)(delayed(parameterSweep)(dataFile, inputs, inputs2.loc[index], index) for index in range(n_cases))
 
-            # Iterate data files and corresponding solar capacity
-            for solarCapacity in solarCapacities:
-
-                # Iterate data files and corresponding solar capacity
-                for battSize in battSizes:
-
-                    # Perform Simulations (Run all plant variations in parallel)
-                    with parallel_backend('multiprocessing', n_jobs=num_cores):
-                        output = Parallel(verbose=10)(delayed(parameterSweep)(dataFile, plantSize, solarCapacity, battSize, inputs.loc[index],index) for index in range(iterations))
-
-                    # Add output to all_outputs
-                    all_outputs = all_outputs + output
+        # Add output to all_outputs
+        all_outputs = all_outputs + output
 
         # Back-up results for current plantType
         df = pd.DataFrame(all_outputs)

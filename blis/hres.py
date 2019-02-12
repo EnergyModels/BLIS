@@ -3,7 +3,7 @@
 BLIS - Balancing Load of Intermittent Solar:
 A characteristic-based transient power plant model
 
-Copyright (C) 2018. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
+Copyright (C) 2019. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -30,6 +30,31 @@ from blis import defaultInputs, PowerPlant, Solar, Fuel, Battery, Grid
 #========================================================================
 # Class to simulate and analyze Hybrid Renewable Energy System (HRES)
 #========================================================================
+# Time Series Data
+attributes_time_series = ['PowerRequest','PowerOutput','PowerRamp','HeatInput','Efficiency',
+                'battCharge','battIncrease','battDecrease','battDischargeRate','battChargeRate','battRamp',
+                'solarUsed','loadShed','deficit','gridUsed','CO2_produced','CO2_captured','Emissions']
+# Results
+attributes_results = ['demand_MWh', 'solar_MWh', 'powerOutput_MWh', 'heatInput_MWh', 'solarUsed_MWh', 'loadShed_MWh',
+              'gridUsed_MWh',
+              'fuelCost_dollars', 'LCOE', 'efficiency_pct', 'emissions_tons', 'deficit_max', 'deficit_min',
+              'deficit_pct_time',
+              'deficit_pct_energy', 'solarCurtail_pct', 'loadShed_pct_energy', 'loadShed_pct_time']
+# Add time of day attributes
+tod_vars = ['emissions', 'costs','demand']
+tod_hrs = range(24)
+attributes_tod = []
+for var in tod_vars:
+    for hr in tod_hrs:
+        if hr < 10:
+            attributes_tod.append(var + '_hr0' + str(hr))
+        else:
+            attributes_tod.append(var + '_hr' + str(hr))
+attributes_results = attributes_results + attributes_tod
+
+#========================================================================
+# Class to simulate and analyze Hybrid Renewable Energy System (HRES)
+#========================================================================
 
 class HRES:
     #========================================================================
@@ -51,23 +76,17 @@ class HRES:
         
         # Create pandas dataframe to hold time series performance
         rows = range(self.steps)
-        cols = ['PowerRequest','PowerOutput','PowerRamp','HeatInput','Efficiency',
-                'battCharge','battIncrease','battDecrease','battDischargeRate','battChargeRate','battRamp',
-                'solarUsed','loadShed','deficit','gridUsed','CO2_produced','CO2_captured','Emissions']
-        self.perf = pd.DataFrame(data=0.0,index=rows,columns = cols)
+        self.perf = pd.DataFrame(data=0.0,index=rows,columns = attributes_time_series)
         
         #----
         # Create pandas series to store results
         #----
-        attributes = ['demand_MWh','solar_MWh','powerOutput_MWh','heatInput_MWh','solarUsed_MWh','loadShed_MWh','gridUsed_MWh',
-                      'fuelCost_dollars','LCOE','efficiency_pct','emissions_tons','deficit_max','deficit_min','deficit_pct_time',
-                      'deficit_pct_energy','solarCurtail_pct','loadShed_pct_energy','loadShed_pct_time']
-        self.results = pd.Series(index = attributes)
+        self.results = pd.Series(index = attributes_results)
                
     #========================================================================
     # Update - empty control, needs to be updated by all children of HRES
     #========================================================================
-    def update(self, datetimeUTC, dt, demand, solar):
+    def update(self, dt, hour, demand, solar):
                      
         #----------
         # Calculate Battery Dis/charge Rate Available
@@ -158,7 +177,7 @@ class HRES:
             diff = diff + battDecrease
             
             # Use grid to make-up remaining difference
-            if diff < self.grid.capacity:
+            if abs(diff) < self.grid.capacity:
                 gridUsed = abs(diff)
             else:
                 gridUsed = self.grid.capacity
@@ -167,7 +186,7 @@ class HRES:
         #----------
         # Calculate Emissions
         #----------  
-        CO2_produced = (gridUsed * dt * self.grid.getEmissions(datetimeUTC)) + (self.plant.heatInput / 60.0 * dt * self.fuel.emissions)
+        CO2_produced = (gridUsed * dt * self.grid.getEmissions(hour)) + (self.plant.heatInput / 60.0 * dt * self.fuel.emissions)
         CO2_captured = CO2_produced * (self.plant.co2CaptureEff / 100.0)
         Emissions = CO2_produced - CO2_captured
         
@@ -210,10 +229,7 @@ class HRES:
         #=======
         # Store performance of current timestep in a pandas series
         #=======
-        attributes = ['PowerRequest','PowerOutput','PowerRamp','HeatInput','Efficiency',
-                'battCharge','battIncrease','battDecrease','battDischargeRate','battChargeRate','battRamp',
-                'solarUsed','loadShed','deficit','gridUsed','CO2_produced','CO2_captured','Emissions']
-        perf = pd.Series(index = attributes)
+        perf = pd.Series(index = attributes_time_series)
         
         # Power plant
         perf.PowerRequest = self.plant.powerRequest
@@ -248,21 +264,23 @@ class HRES:
         for step in range(self.steps):
             
             # Access current demand and time step
-            datetimeUTC = self.data.loc[step,'DatetimeUTC']
+
             dt          = self.data.loc[step,'dt']
+            hour        = self.data.loc[step,'hour']
             demand      = self.data.loc[step,'demand']
             solar       = self.data.loc[step,'solar']
                         
             # Print Status (if debugging)
             if debug== True:
                 print "\n\nStep: " + str(step)
-                print "datetimeUTC : " + str(datetimeUTC)
+
                 print "dt    (min) : " + str(dt)
+                print "hour : " + str(hour)
                 print "Demand (MW) : " + str(demand)
                 print "Solar  (MW) : " + str(solar) 
                 
             # Update System Operation
-            self.perf.loc[step,:] = self.update(datetimeUTC, dt, demand, solar)
+            self.perf.loc[step, :] = self.update(dt, hour, demand, solar)
             
             # Store Current Performance
             
@@ -364,8 +382,9 @@ class HRES:
         # I, Install Costs (with financing)
         plant_install_cost =    self.plant.cost_install * (1000.0 * self.plant.capacity)   # $
         PV_install_cost =       self.solar.cost_install * (1000.0 * self.solar.capacity )  # $
-        batt_install_cost =     self.batt.cost_install  * (1000.0 * self.batt.capacity)    # $
-        total_install_cost =    plant_install_cost + PV_install_cost + batt_install_cost
+        batt_install_cost =     self.batt.cost_install  * (1000.0 * self.batt.capacity)  # $
+        batt_init_charge_cost =  self.batt.capacity * self.batt.initCharge * self.grid.cost_OM_var  # $
+        total_install_cost =    plant_install_cost + PV_install_cost + batt_install_cost + batt_init_charge_cost # $
         I = -1.0*np.pmt(self.i,self.n,total_install_cost) # Apply financing
     
         # M, annual maintenace costs
@@ -380,14 +399,27 @@ class HRES:
         F = LCOE_scale * fuelCost_dollars # $
         
         # E, annual electricity generation
-#        E = LCOE_scale * powerOutput_MWh * 1000.0 # kWH                    #!!!!!!!!
         E = LCOE_scale * demand_MWh * 1000.0 # kWH
     
         num = I + M + F
         denom = E
     
         LCOE = num / denom
-    
+
+        # ----
+        # Time of Day Analysis
+        # ----
+        # Change index to datetime
+        # data.index = pd.to_datetime(data.loc[:, 'DatetimeUTC'])
+
+        # Perform Analysis (references global variables defined before HRES definition)
+        tod_analysis = pd.DataFrame(index=tod_hrs, columns=tod_vars)
+        for hour in tod_analysis.index:
+            ind = data.hour == hour
+            tod_analysis.loc[hour, 'emissions'] = perf.loc[ind, 'Emissions'].sum()
+            tod_analysis.loc[hour, 'costs'] = df_heatInput.loc[ind].sum() * self.fuel.cost
+            tod_analysis.loc[hour, 'demand'] = df_demand.loc[ind].sum()
+
         #----
         # Store results
         #----
@@ -412,11 +444,18 @@ class HRES:
         self.results.solarCurtail_pct       = solarCurtail_pct    # %
         self.results.loadShed_pct_energy    = loadShed_pct_energy # %
         self.results.loadShed_pct_time      = loadShed_pct_time   # %
-                
+
+        # Time of day results
+        for var in tod_vars:
+            for hr in tod_hrs:
+                if hr < 10:
+                    entry = var + '_hr0' + str(hr)
+                else:
+                    entry = var + '_hr' + str(hr)
+                self.results[entry] = tod_analysis.loc[hr, var]
         # Return results
         return self.results
-    
-    
+
     #========================================================================
     # Save Time Series Data
     #========================================================================
@@ -430,7 +469,7 @@ class HRES:
     def plot_efficiency(self,caseName='Plot'):
         
         # Plot
-        x = self.data.loc[:,'t'] - self.data.loc[0,'t']
+        x = self.data.index#loc[:,'t'] - self.data.loc[0,'t']
         plt.plot(x,self.perf.loc[:,'Efficiency'], label='Efficiency')
         
         # Grid + legend
@@ -450,7 +489,7 @@ class HRES:
         colors = sns.color_palette("colorblind")
         
         # Create common time series
-        x = self.data.loc[:,'t'] - self.data.loc[0,'t']
+        x = self.data.index#loc[:,'t'] - self.data.loc[0,'t']
         
         for n in range(3):
         
@@ -525,7 +564,7 @@ class HRES:
         
         # Plot
         # Exclude first data point for initialization
-        x = self.data.loc[1:,'t'] - self.data.loc[0,'t']
+        x = self.data.index[1:]#loc[1:,'t'] - self.data.loc[0,'t']
         plt.plot(x,self.perf.loc[1:,'PowerRamp'], label='PowerRamp')
 
         # Grid + lables
@@ -542,7 +581,7 @@ class HRES:
     def plot_battStatus(self,caseName='Plot'):        
         
         # Create common time series
-        x = self.data.loc[:,'t'] - self.data.loc[0,'t']
+        x = self.data.index#loc[:,'t'] - self.data.loc[0,'t']
         
         #Subplot 1
         plt.subplot(2,1,1)
