@@ -23,3 +23,4 @@ from .storage import Battery
 from .hres import HRES
 from .hres import SBGS
 from .monte_carlo_inputs import monteCarloInputs
+from .monte_carlo_inputs import baselineInputs

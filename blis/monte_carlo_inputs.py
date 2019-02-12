@@ -16,7 +16,6 @@ import pandas as pd
 import numpy as np
 # =============================================================================#
 # Create MonteCarlo Inputs
-# Note: iterations must be an integer
 # =============================================================================#
 def monteCarloInputs(filename, sheetname, iterations):
     # Read Excel with inputs
@@ -64,3 +63,22 @@ def monteCarloInputs(filename, sheetname, iterations):
             df.loc[:][param] = np.random.triangular(left, mode, right, size=iterations)
     df.loc[:, 'sheetname'] = sheetname
     return df
+
+# =============================================================================#
+# Use MonteCarlo Inputs to Create Baselines
+# =============================================================================#
+def baselineInputs(filename, sheetname):
+    # Read Excel with inputs
+    df_xls = pd.read_excel(filename, sheet_name=sheetname, index_col=0)
+
+    # Create series to hold inputs
+    parameters1 = df_xls.index.values
+    parameters2 = np.append('sheetname', parameters1)
+    s = pd.Series(data=0.0, index=parameters2)
+
+    # Create Inputs
+    for param in parameters1:
+        s.loc[param] = df_xls.loc[param]["Average"]
+
+    s.loc['sheetname'] = sheetname
+    return s

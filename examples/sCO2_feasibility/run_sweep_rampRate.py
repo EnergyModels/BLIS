@@ -17,12 +17,12 @@ import time
 import numpy as np
 import multiprocessing
 from joblib import Parallel, delayed, parallel_backend
-from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES, monteCarloInputs
+from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES, baselineInputs
 
 #=====================
 # Function to enable parameter sweep
 #=====================
-def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
+def parameterSweep(dataFile, solarCapacity, battSize, inputs, rampRate,index):
     # Record time to solve
     t0 = time.time()
     
@@ -46,7 +46,7 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
     plant_inputs.Eff_B          = inputs.Eff_B
     plant_inputs.Eff_C          = inputs.Eff_C
     plant_inputs.maxEfficiency  = inputs.maxEfficiency
-    plant_inputs.rampRate       = inputs.rampRate
+    plant_inputs.rampRate       = rampRate
     plant_inputs.minRange       = inputs.minRange
     plant_inputs.cost_install   = inputs.cost_install
     plant_inputs.cost_OM_fix    = inputs.cost_OM_fix
@@ -66,15 +66,12 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
     t1 = time.time()
     print "Time Elapsed: " + str(round(t1-t0,2)) + " s"
 
-    # Save simulation results
-    if index==0:
-        casename = inputs.sheetname + '_PV' + str(solarCapacity) + '_Batt' + str(battSize)
-        hres.save(casename=casename)
-
     # Combine inputs and results into output and then return
+    inputs = inputs.drop('rampRate')
     s_solarCapacity = pd.Series([solarCapacity],index=['solarCapacity_MW'])
     s_battSize = pd.Series([battSize], index=['battSize_MW'])
-    output = pd.concat([inputs,s_solarCapacity,s_battSize,results],axis=0)
+    s_rampRate = pd.Series([solarCapacity], index=['rampRate'])
+    output = pd.concat([inputs, s_solarCapacity, s_battSize, s_rampRate, results], axis=0)
     return output
 
 #=====================
@@ -85,24 +82,28 @@ if __name__ == '__main__':
     #==============
     # User Inputs
     #==============
-    studyName = "Results_MonteCarlo1"
-    
+    studyName = "results_sweep_rampRate"
+
     # Data files (Demand and solar data)
     # dataFiles = ["data001.csv","data063.csv"] # Entire Year (used in article)
-    dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
+    dataFiles = ["data001_July.csv","data063_July.csv"] # Entire Year (used in article)
+    # dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
     solarCapacities = [0.513,32.3]  # (MW) Needs to be the same length as dataFiles
 
     # Battery Sizes to investigate [1:1, MW:MWh]
     battSizes = [0, 30.0]
 
-    # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
-    xls_filename = "inputs_montecarlo1.xlsx"
-    sheetnames   = ["sCO2","OCGT","CCGT","sCO2_CCS","CCGT_CCS"]
-    
     # Specify number of iterations per case
-    iterations = 25 # To test
-    # iterations = 100 # Used in article
-    
+    # iterations = 10  # To test
+    iterations = 16 # Used in article
+
+    # Ramp Rates to investigate [1:1, MW:MWh]
+    rampRates = np.linspace(1,30,iterations)
+
+    # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
+    xls_filename = "inputs_montecarlo.xlsx"
+    sheetname = "sCO2"
+
     # Number of cores to use
     num_cores = multiprocessing.cpu_count()-1 # Consider saving one for other processes
     
@@ -110,31 +111,29 @@ if __name__ == '__main__':
     # Run Simulations
     #==============
     all_outputs = []
-    count = 0
-    
-    # Iterate each Monte Carlo case
-    for sheetname in sheetnames:
-    
-        inputs = monteCarloInputs(xls_filename,sheetname,iterations)
-        
+    # ------
+    # Baseline Configuration Inputs
+    # ------
+    inputs = baselineInputs(xls_filename, sheetname)
+
+    # ------
+    # Run Sweeps
+    # ------
+
+    # Iterate data files and corresponding solar capacity
+    for (dataFile, solarCapacity) in zip(dataFiles, solarCapacities):
+
         # Iterate data files and corresponding solar capacity
-        for (dataFile,solarCapacity) in zip(dataFiles,solarCapacities):
+        for battSize in battSizes:
 
-            # Iterate data files and corresponding solar capacity
-            for battSize in battSizes:
+            # Perform Simulations (Run all plant variations in parallel)
+            with parallel_backend('multiprocessing', n_jobs=num_cores):
+                output = Parallel(verbose=10)(delayed(parameterSweep)(dataFile, solarCapacity, battSize, inputs, rampRates[index],index) for index in range(iterations))
 
-                # Perform Simulations (Run all plant variations in parallel)
-                with parallel_backend('multiprocessing', n_jobs=num_cores):
-                    output = Parallel(verbose=10)(delayed(parameterSweep)(dataFile, solarCapacity, battSize, inputs.loc[index],index) for index in range(iterations))
-
-                # Add output to all_outputs
-                all_outputs = all_outputs + output
+            # Add output to all_outputs
+            all_outputs = all_outputs + output
                 # Move output to dataframe and save (if iterations greater than 10)
-                if iterations > 10:
-                    df = pd.DataFrame(output)
-                    df.to_csv(studyName + '_pt' + str(count)+'.csv')
-                    count = count + 1
-            
+
     # Combine outputs into single dataframe and save
     df = pd.DataFrame(all_outputs)
     df.to_csv(studyName + '.csv')
