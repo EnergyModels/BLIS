@@ -654,6 +654,7 @@ ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=df3)
 ax.set_xlabel('Time of Day (hr)')
 ax.set_ylabel('Emissions (ton/kWh)')
 plt.savefig(savename_emissions,dpi=DPI)
+plt.close()
 
 # Costs Plot
 plt.figure()
@@ -661,3 +662,4 @@ ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=df3)
 ax.set_xlabel('Time of Day (hr)')
 ax.set_ylabel('Fuel Costs ($/kWh)')
 plt.savefig(savename_costs,dpi=DPI)
+plt.close()
