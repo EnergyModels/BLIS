@@ -24,7 +24,7 @@ class Grid:
     #----------
     # Instantiate
     #----------
-    def __init__(self, capacity = 0.0, maxEmissions = 0.5, emissionCurve_hr = np.linspace(1,24,24), emissionCurve_pct = np.linspace(100,100,24), cost_OM_var = 10.0):
+    def __init__(self, capacity = 0.0, maxEmissions = 0.5, emissionCurve_hr = np.linspace(1,24,24), emissionCurve_pct = np.linspace(100,100,24), cost_OM_var = 100.0):
         
         # Capacity
         self.capacity              = capacity             # (MW)
