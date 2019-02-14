@@ -666,8 +666,10 @@ for i in range(1):
         solarCap = solarCaps[j]
         data = df3[(df.battSize_MW == battSize) & (df.solarCapacity_MW == solarCap)]
         ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=data,ax=axes[i, j])
-        ax.set_xlabel('Time of Day (hr)')
-        ax.set_ylabel('Emissions (ton/kWh)')
+        if j == 1:
+            ax.set_xlabel('Time of Day (hr)')
+        if i == 0:
+            ax.set_ylabel('Emissions (ton/kWh)')
 plt.savefig(savename_emissions,dpi=DPI)
 plt.close()
 
@@ -679,10 +681,10 @@ for i in range(1):
         battSize = battSizes[i]
         solarCap = solarCaps[j]
         data = df3[(df.battSize_MW == battSize) & (df.solarCapacity_MW == solarCap)]
-        ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=data)
-        ax.set_xlabel('Time of Day (hr)')
-        ax.set_ylabel('Fuel Costs ($/kWh)')
+        ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=data,ax=axes[i, j])
+        if j == 1:
+            ax.set_xlabel('Time of Day (hr)')
+        if i == 0:
+            ax.set_ylabel('Fuel Costs ($/kWh)')
 plt.savefig(savename_costs,dpi=DPI)
 plt.close()
-
-[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
