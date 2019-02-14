@@ -83,8 +83,9 @@ if __name__ == '__main__':
     studyName = "results_monte_carlo"
     
     # Data files (Demand and solar data)
-    # dataFiles = ["data001.csv","data063.csv"] # Entire Year (used in article)
-    dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
+    dataFiles = ["data001.csv","data063.csv"] # Entire Year (used in article)
+    # dataFiles = ["data001_July.csv", "data063_July.csv"]  # Single Month (used in article)
+    # dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
     solarCapacities = [0.513,32.3]  # (MW) Needs to be the same length as dataFiles
 
     # Battery Sizes to investigate [1:1, MW:MWh]

@@ -33,6 +33,9 @@ savename = "Fig6_LCOE.png"
 # Import results
 df = pd.read_csv(results_filename)
 
+# Filter Results
+df = df[(df.LCOE > 0) & (df.emissions_tons > 0)]
+
 # Prepare results for plotting
     # Create series for plantType
 df = df.assign(plantType=df.sheetname)
@@ -135,6 +138,9 @@ savename = "Fig7_sCO2_Sensitivity.png"
 #=============================================================================#
 # Import results
 df = pd.read_csv(results_filename)
+
+# Filter Results
+df = df[(df.LCOE > 0) & (df.emissions_tons > 0)]
 
 # Prepare results for plotting
     # Create series for plantType
@@ -648,18 +654,35 @@ df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ df3.loc[:,'demand_hr']
 # Convert costs from $/MWh to $/kWh
 df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ 1000.0
 
+battSizes = [0.0,30.0]
+solarCaps = [0.513,32.3]
+
 # Emissions Plot
 plt.figure()
-ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=df3)
-ax.set_xlabel('Time of Day (hr)')
-ax.set_ylabel('Emissions (ton/kWh)')
+f,axes = plt.subplots(2,2,sharex=True,sharey=True,figsize=(5,5))
+for i in range(1):
+    for j in range(1):
+        battSize = battSizes[i]
+        solarCap = solarCaps[j]
+        data = df3[(df.battSize_MW == battSize) & (df.solarCapacity_MW == solarCap)]
+        ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=data,ax=axes[i, j])
+        ax.set_xlabel('Time of Day (hr)')
+        ax.set_ylabel('Emissions (ton/kWh)')
 plt.savefig(savename_emissions,dpi=DPI)
 plt.close()
 
 # Costs Plot
 plt.figure()
-ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=df3)
-ax.set_xlabel('Time of Day (hr)')
-ax.set_ylabel('Fuel Costs ($/kWh)')
+f,axes = plt.subplots(2,2,sharex=True,sharey=True,figsize=(5,5))
+for i in range(1):
+    for j in range(1):
+        battSize = battSizes[i]
+        solarCap = solarCaps[j]
+        data = df3[(df.battSize_MW == battSize) & (df.solarCapacity_MW == solarCap)]
+        ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=data)
+        ax.set_xlabel('Time of Day (hr)')
+        ax.set_ylabel('Fuel Costs ($/kWh)')
 plt.savefig(savename_costs,dpi=DPI)
 plt.close()
+
+[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
