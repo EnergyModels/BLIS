@@ -30,6 +30,8 @@ DPI = 1000
 results_filename = "results_monte_carlo.csv"
 savename = "Fig6_LCOE.png"
 #=============================================================================#
+sns.reset_orig
+sns.set_style('white')
 # Import results
 df = pd.read_csv(results_filename)
 
@@ -54,6 +56,8 @@ a = a.ravel()
 # Collect statistics
 labels = ['plantType','battSize_MW','pct_solar','min','avg','max']
 stats = []
+variables = ['plantType','battSize_MW','pct_solar','min','avg','max']
+stats = pd.DataFrame(columns = variables)
 
 for idx,ax in enumerate(a):
         
@@ -91,14 +95,22 @@ for idx,ax in enumerate(a):
         # Plot
         df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
         
-        bin_size = 0.001; min_edge = 0.06; max_edge = 0.14
+        bin_size = 0.001; min_edge = 0.06; max_edge = 0.12
 #        bin_size = 0.001; min_edge = 0.02; max_edge = 0.14
         N = int((max_edge-min_edge)/bin_size); Nplus1 = N + 1
         bin_list = np.linspace(min_edge, max_edge, Nplus1)
         ax.hist(df2.loc[:,y_var]*y_convert,label=label,color=color,bins=bin_list,histtype='step',fill=False)#,facecolor=False)
         
         # Collect statistics
-        stats.append([plantType,battSize,pct_solar,df2.loc[:,y_var].min(),df2.loc[:,y_var].mean(),df2.loc[:,y_var].max()])
+#        stats.append([plantType,battSize,pct_solar,df2.loc[:,y_var].min(),df2.loc[:,y_var].mean(),df2.loc[:,y_var].max()])
+        s = pd.Series(index=variables)
+        s['plantType'] = plantType
+        s['battSize_MW'] = battSize
+        s['pct_solar'] = pct_solar
+        s['min'] = df2.loc[:,y_var].min()
+        s['mean'] = df2.loc[:,y_var].mean()
+        s['max'] = df2.loc[:,y_var].max()
+        stats  =stats.append(s,ignore_index=True)
         
     # Axes Labels
     # X-axis Labels (Only bottom)
@@ -136,6 +148,8 @@ df_stats = pd.DataFrame(stats)
 results_filename = "results_monte_carlo.csv"
 savename = "Fig7_sCO2_Sensitivity.png"
 #=============================================================================#
+sns.set_style('white')
+
 # Import results
 df = pd.read_csv(results_filename)
 
@@ -156,6 +170,9 @@ df.loc[(df.pct_solar == 32.3),'pct_solar']=63.0
 # Create Plots
 f,a = plt.subplots(2,3)#,sharex=True, sharey=True
 a = a.ravel()
+
+
+
 
 for idx,ax in enumerate(a):
         
@@ -178,8 +195,8 @@ for idx,ax in enumerate(a):
         x_label = 'Max Efficiency (%)'
         x_convert = [1.0]
         xlims = [40,60]
-        xticks       =  [] # Leave empty if unused
-        xtick_labels =  []
+        xticks       =  [40,50,60] # Leave empty if unused
+#        xtick_labels =  []
         
     elif idx == 1 or idx == 4:    
         x_var = 'rampRate'
@@ -187,14 +204,14 @@ for idx,ax in enumerate(a):
         x_convert = [1.0]
         xlims = [30,110]
         xticks       =  [30,75,110]
-        xtick_labels =  ['30','75','110']
+#        xtick_labels =  ['30','75','110']
     elif idx == 2 or idx == 5:    
         x_var = 'minRange'
         x_label = 'Min. Load (%)'
         x_convert = [1.0]
         xlims = [15,60]
-        xticks       =  (30,75,110)
-        xtick_labels =  ('30','75','110')
+        xticks       =  (20,40,60)
+#        xtick_labels =  ('30','75','110')
         
     #  Configurations
     plantTypes = ['sCO2','sCO2','sCO2']
@@ -220,6 +237,11 @@ for idx,ax in enumerate(a):
     ax.set_xlim(left=xlims[0],right=xlims[1])
 #    ax.set_ylim(bottom=ylims[0],top=ylims[1])
     
+    if len(xticks) >2:
+        ax.xaxis.set_ticks(xticks)
+#        ax.set_xticks(xticks)
+#        ax.set_xticklabels = xtick_labels
+    
     # X-axis Labels (Only bottom)
     if idx ==3 or idx==4 or idx==5:
         ax.set_xlabel(x_label)
@@ -234,7 +256,8 @@ for idx,ax in enumerate(a):
 
     # Legend (only for middle bottom)
     if idx==4:
-        ax.legend(bbox_to_anchor=(2.6, -0.4),ncol=3)
+#        ax.legend(bbox_to_anchor=(2.6, -0.4),ncol=3)
+        ax.legend(bbox_to_anchor=(2.6, -0.4),ncol=3, prop={'size': 12})
                 
     # Caption labels
     caption_labels = ['A','B','C','D','E','F']
@@ -252,6 +275,7 @@ results_filename = "results_sweep_rampRate.csv"  # 63% solar
 #results_filename2 = "Results_MonteCarlo3.csv"  # 1% solar
 savename = "Fig8_RampRate_Deficit.png"
 #=============================================================================#
+sns.set_style('white')
 # Import results
 #df1 = pd.read_csv(results_filename1)
 #df2 = pd.read_csv(results_filename2)
@@ -325,6 +349,7 @@ plt.close()
 results_filename = "Results_SampleDay_Oct30th_sCO2.csv"
 savename = "Fig9_ControlScheme.png"
 #=============================================================================#
+sns.set_style('whitegrid')
 # Customize Time Shown
 #file_t_start  = -4.0
 t_start = 7.0
@@ -418,6 +443,7 @@ plt.close()
 results_filename = "results_monte_carlo.csv"
 savename = "Fig10_Curtailment.png"
 #=============================================================================#
+sns.set_style('white')
 # Import results
 df = pd.read_csv(results_filename)
 
@@ -465,7 +491,7 @@ for idx,ax in enumerate(a):
         # Set Color
         
         if plantType =='sCO2':
-            color =     colors[0]
+            color = colors[0]
             label = 'sCO$_2$'
         elif plantType =='OCGT':
             color = colors[1]
@@ -510,6 +536,8 @@ plt.close()
 results_filename = "results_sweep_battSize.csv"
 savename = "Fig11_BatterySize.png"
 #=============================================================================#
+#sns.reset_orig
+sns.set_style('white')
 # Import results
 df = pd.read_csv(results_filename)
 
@@ -536,12 +564,12 @@ for idx,ax in enumerate(a):
         y_var = 'solarCurtail_pct'
         y_label = 'Curtailment (%)'
         y_convert  = [1.0]
-        ylims = [0,40]
+        ylims = [0,25]
     elif idx == 1:
         y_var = 'fuelCost_dollars'
         y_label = 'Fuel Cost (M$)'
         y_convert  = [1./1.E6]
-        ylims = [11,17] 
+        ylims = [11,13] 
     elif idx == 2:
         y_var = 'LCOE'
         y_label = 'LCOE ($/kWh)'
@@ -588,7 +616,8 @@ for idx,ax in enumerate(a):
     # X-axis Labels (Only bottom)
     if idx ==2:
         ax.set_xlabel(x_label)
-        ax.legend(ncol=3,bbox_to_anchor=(1.1, -0.5))
+#        ax.legend(ncol=3,bbox_to_anchor=(1.1, -0.5))
+        ax.legend(bbox_to_anchor=(1.1, -0.5),ncol=3, prop={'size': 11})
     else:
         ax.get_xaxis().set_visible(False)
     
@@ -659,30 +688,53 @@ solarCaps = [0.513,32.3]
 
 # Emissions Plot
 #plt.figure()
-f,axes = plt.subplots(2,2,sharex=True,sharey=True,figsize=(5,5))
+f,axes = plt.subplots(2,2,sharex=True,sharey=True)#,figsize=(5,5))
 for i in range(2):
     for j in range(2):
         battSize = battSizes[i]
         solarCap = solarCaps[j]
         data = df3[(df3.battSize_MW == battSize) & (df3.solarCapacity_MW == solarCap)]
-        ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=data,ax=axes[i, j],legend=False)
+        if i==1 and j==1:
+            legend = 'brief'
+            ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=data,ax=axes[i, j],legend=legend)
+            handles, labels = ax.get_legend_handles_labels()
+#            leg = ax.legend(handles[1:],labels[1:])
+            leg = ax.legend(handles[1:],labels[1:],bbox_to_anchor=(0.6, -0.3),ncol=4)
+            leg.set_title('')
+#            ax.legend().set_title('')
+        else:
+            legend = False
+            ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=data,ax=axes[i, j],legend=legend)
+#            ax.legend().set_title('')
         ax.set_xlabel('Time of Day (hr)')
-        ax.set_ylabel('Emissions (ton/kWh)')
-plt.savefig(savename_emissions,dpi=DPI)
-plt.tight_layout()
-plt.close()
+        ax.set_ylabel('Emissions (tons/kWh)')
 
-# Costs Plot
-#plt.figure()
-f,axes = plt.subplots(2,2,sharex=True,sharey=True,figsize=(5,5))
-for i in range(2):
-    for j in range(2):
-        battSize = battSizes[i]
-        solarCap = solarCaps[j]
-        data = df3[(df3.battSize_MW == battSize) & (df3.solarCapacity_MW == solarCap)]
-        ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=data,ax=axes[i, j],legend=False)
-        ax.set_xlabel('Time of Day (hr)')
-        ax.set_ylabel('Fuel Costs ($/kWh)')
-plt.savefig(savename_costs,dpi=DPI)
-plt.tight_layout()
+        # Caption labels
+        caption_labels = ['A', 'B', 'C', 'D', 'E', 'F']
+        ax.text(0.1, 0.9, caption_labels[i+j+i*j], horizontalalignment='center', verticalalignment='center',
+                 transform=ax.transAxes, fontsize='medium', fontweight='bold')
+
+f.subplots_adjust(bottom=0.2)
+plt.savefig(savename_emissions,dpi=DPI,bbox_extra_artists=(leg))
+#plt.tight_layout()
 plt.close()
+#
+## Costs Plot
+##plt.figure()
+#f,axes = plt.subplots(2,2,sharex=True,sharey=True)#,figsize=(5,5))
+#for i in range(2):
+#    for j in range(2):
+#        battSize = battSizes[i]
+#        solarCap = solarCaps[j]
+#        data = df3[(df3.battSize_MW == battSize) & (df3.solarCapacity_MW == solarCap)]
+#        ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=data,ax=axes[i, j],legend=False)
+#        ax.set_xlabel('Time of Day (hr)')
+#        ax.set_ylabel('Fuel Costs ($/kWh)')
+#
+#        # Caption labels
+#        caption_labels = ['A', 'B', 'C', 'D', 'E', 'F']
+#        ax.text(0.1, 0.9, caption_labels[i+j+i*j], horizontalalignment='center', verticalalignment='center',
+#                 transform=ax.transAxes, fontsize='medium', fontweight='bold')
+#plt.savefig(savename_costs,dpi=DPI)
+#plt.tight_layout()
+#plt.close()

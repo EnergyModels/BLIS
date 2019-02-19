@@ -20,7 +20,7 @@ debug = False # If True, additional information is presented to the console
 #========================================================================        
 class Fuel:
     
-    def __init__(self,fuelType='NATGAS',cost = 23.27,emissions = 0.18):
+    def __init__(self,fuelType='NATGAS',cost = 10.58,emissions = 0.18):
         self.fuelType  = fuelType   # name of fuel
         self.cost      = cost       # cost [$] per MWh thermal
         self.emissions = emissions  # CO2 emissions [tons] per MWh thermals

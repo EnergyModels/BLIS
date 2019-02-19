@@ -28,10 +28,10 @@ data = pd.read_csv(filename)
 solar = Solar(plantType = 'PV', capacity = 32.3, cost_install = 2004., cost_OM_fix = 22.02)
 
 # Battery Storage - All inputs are optional (default values shown below)
-batt = Battery(capacity = 30.0, rateMax= 30.0, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 0.0)
+batt = Battery(capacity = 30.0, rateMax= 30.0, roundTripEff = 85.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 0.0)
 
 # Fuel - All inputs are optional (default values shown below)
-fuel = Fuel(fuelType='NATGAS',cost = 23.27,emissions = 0.18)
+fuel = Fuel(fuelType='NATGAS',cost = 10.58,emissions = 0.18)
 
 # Create power plant
     # 1 - create pandas series of power plant characteristics

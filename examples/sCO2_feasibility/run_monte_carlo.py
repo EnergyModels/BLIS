@@ -33,14 +33,15 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, index):
     solar        = Solar(plantType = 'PV', capacity = solarCapacity, cost_install = 2004., cost_OM_fix = 22.02) 
     
     # Battery Storage - All inputs are optional (default values shown below)
-    batt         = Battery(capacity = battSize, rateMax= battSize, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 100.0)
+    batt         = Battery(capacity = battSize, rateMax= battSize, roundTripEff = 85.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 100.0)
     
     # Fuel - All inputs are optional (default values shown below)
-    fuel         = Fuel(fuelType='NATGAS',cost = 23.27,emissions = 0.18)
+    fuel         = Fuel(fuelType='NATGAS',cost = 10.58,emissions = 0.18)
     
     # Create power plant
         # 1 - create pandas series of power plant characteristics
     plant_inputs                = defaultInputs(plantType = 'CCGT') # Start with CCGT default inputs and then adjust to specific case
+    plant_inputs.capacity       = 51.3  # MW
     plant_inputs.plantType      = inputs.sheetname
     plant_inputs.Eff_A          = inputs.Eff_A
     plant_inputs.Eff_B          = inputs.Eff_B

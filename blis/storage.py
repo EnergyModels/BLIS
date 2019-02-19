@@ -23,7 +23,7 @@ class Storage:
     #----------
     # Instantiate
     #----------
-    def __init__(self, capacity = 30.0, chargeRateMax= 30.0, dischargeRateMax = 30.0, roundTripEff = 90.0, tau = 30.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = 0.0):
+    def __init__(self, capacity = 30.0, chargeRateMax= 30.0, dischargeRateMax = 30.0, roundTripEff = 85.0, tau = 30.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = 0.0):
         
         
         # Battery Properties:
@@ -108,4 +108,4 @@ class Storage:
 class Battery(Storage):
     
     def __init__(self, capacity = 30.0, rateMax= 30.0, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = 0.0):
-        Storage.__init__(self, capacity = capacity, chargeRateMax= rateMax, dischargeRateMax = rateMax, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = initCharge)
+        Storage.__init__(self, capacity = capacity, chargeRateMax= rateMax, dischargeRateMax = rateMax, roundTripEff = 85.0, cost_install = 2067., cost_OM_fix = 35.6, initCharge = initCharge)
