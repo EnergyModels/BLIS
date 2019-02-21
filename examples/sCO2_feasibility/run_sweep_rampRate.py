@@ -41,7 +41,7 @@ def parameterSweep(dataFile, solarCapacity, battSize, inputs, rampRate,index):
     # Create power plant
         # 1 - create pandas series of power plant characteristics
     plant_inputs                = defaultInputs(plantType = 'CCGT') # Start with CCGT default inputs and then adjust to specific case
-    plant_inputs.capacity = 51.3  # MW
+    plant_inputs.capacity       = 51.3  # MW
     plant_inputs.plantType      = inputs.sheetname
     plant_inputs.Eff_A          = inputs.Eff_A
     plant_inputs.Eff_B          = inputs.Eff_B
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     dataFiles = ["data001.csv","data063.csv"] # Entire Year (used in article)
     # dataFiles = ["data001_July.csv","data063_July.csv"] # Single Month (used in article)
     # dataFiles = ["data001_Oct30th.csv","data063_Oct30th.csv"] # Single Day
-    solarCapacities = [0.513,32.3]  # (MW) Needs to be the same length as dataFiles
+    solarCapacities = [0.635,32.635]  # (MW) Needs to be the same length as dataFiles
 
     # Battery Sizes to investigate [1:1, MW:MWh]
     battSizes = [0, 30.0]

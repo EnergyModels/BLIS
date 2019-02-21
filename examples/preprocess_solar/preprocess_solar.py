@@ -15,7 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 import pandas as pd
 
 # Data-file details
-filename = "PVLibSolarDataForJeffv2.csv"
+filename = "PVLibSolarDataForJeffv6.csv"
 timezone_original = 'UTC'
 timezone_new = 'US/Eastern'
 
@@ -55,12 +55,12 @@ for i in range(2):
     if i ==0:
         # Case 1 - 1% solar
         case = 'data001'
-        df_out['solar'] = df.loc[:,'UVA_Grounds']
+        df_out['solar'] = df.loc[:,'UVA_Rooftop']
         
     else:
         # Case 2 - 63% solar
         case = 'data063'
-        df_out['solar'] = df.loc[:,'UVA_Grounds'] + df.loc[:,'Hollyfield'] + df.loc[:,'Puller']
+        df_out['solar'] = df.loc[:,'Rooftop_and_32MWTracker']
 
     # A - Entire Timeperiod
     savename = case + '.csv'
