@@ -96,10 +96,10 @@ if __name__ == '__main__':
 
     # Specify number of iterations per case
     # iterations = 10  # To test
-    iterations = 61 # Used in article
+    iterations = 117 # Used in article
 
     # Ramp Rates to investigate [1:1, MW:MWh]
-    rampRates = np.linspace(1,16,iterations)
+    rampRates = np.linspace(1,30,iterations)
 
     # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
     xls_filename = "inputs_montecarlo.xlsx"

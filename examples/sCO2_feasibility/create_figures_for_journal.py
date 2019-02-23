@@ -46,8 +46,8 @@ df.loc[(df.plantType == 'CCGT_Batt'),'plantType']='CCGT'
 df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
-df.loc[(df.pct_solar == 0.513),'pct_solar']=1.0
-df.loc[(df.pct_solar == 32.3),'pct_solar']=63.0
+df.loc[(df.pct_solar == 0.635),'pct_solar']=1.0
+df.loc[(df.pct_solar == 32.635),'pct_solar']=63.0
 
 # Create Plots
 f,a = plt.subplots(2,2,sharex=True, sharey=True )
@@ -95,8 +95,8 @@ for idx,ax in enumerate(a):
         # Plot
         df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
         
-        bin_size = 0.001; min_edge = 0.06; max_edge = 0.12
-#        bin_size = 0.001; min_edge = 0.02; max_edge = 0.14
+#        bin_size = 0.001; min_edge = 0.06; max_edge = 0.12
+        bin_size = 0.001; min_edge = 0.03; max_edge = 0.08
         N = int((max_edge-min_edge)/bin_size); Nplus1 = N + 1
         bin_list = np.linspace(min_edge, max_edge, Nplus1)
         ax.hist(df2.loc[:,y_var]*y_convert,label=label,color=color,bins=bin_list,histtype='step',fill=False)#,facecolor=False)
@@ -164,8 +164,8 @@ df.loc[(df.plantType == 'CCGT_Batt'),'plantType']='CCGT'
 df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
-df.loc[(df.pct_solar == 0.513),'pct_solar']=1.0
-df.loc[(df.pct_solar == 32.3),'pct_solar']=63.0
+df.loc[(df.pct_solar == 0.635),'pct_solar']=1.0
+df.loc[(df.pct_solar == 32.635),'pct_solar']=63.0
 
 # Create Plots
 f,a = plt.subplots(2,3)#,sharex=True, sharey=True
@@ -286,8 +286,8 @@ df = pd.read_csv(results_filename)
 # Prepare results for plotting
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
-df.loc[(df.pct_solar == 0.513),'pct_solar']=1.0
-df.loc[(df.pct_solar == 32.3),'pct_solar']=63.0
+df.loc[(df.pct_solar == 0.635),'pct_solar']=1.0
+df.loc[(df.pct_solar == 32.635),'pct_solar']=63.0
 
 # Create Plots
 ax = plt.subplot(111)
@@ -325,7 +325,8 @@ for plantType,battSize,pct_solar,label,dot_color,marker in zip(plantTypes,battSi
     ax.scatter(x.values,y.values,c=dot_color,marker=marker,label=label)
 
 # Set X and Y Limits
-#ax.set_xlim(left=xlims[0],right=xlims[1])
+xlims = [0,16]
+ax.set_xlim(left=xlims[0],right=xlims[1])
 #ax.set_ylim(bottom=ylims[0],top=ylims[1])
 
 # X-axis Labels
@@ -346,7 +347,8 @@ plt.close()
 
 #%%=============================================================================#
 # Figure 9 - Control Scheme
-results_filename = "Results_SampleDay_Oct30th_sCO2.csv"
+results_filename1 = "Results_SampleDay_Oct30th_sCO2_30.csv"
+results_filename2 = "Results_SampleDay_Oct30th_sCO2_60.csv"
 savename = "Fig9_ControlScheme.png"
 #=============================================================================#
 sns.set_style('whitegrid')
@@ -356,80 +358,82 @@ t_start = 7.0
 t_end   = 22.0
 
 # Import results
-df = pd.read_csv(results_filename)
+df1 = pd.read_csv(results_filename)
+df2 = pd.read_csv(results_filename)
 
-for n in range(3):
-#   if n<3 :
-#      plt.tick_params(labelbottom='off')
-    x = df.index/60.0# - df.loc[0,'t']/60.0 + file_t_start
-    if n ==0:
-#       x = df.loc[:,'t']
-       y1 = df.loc[:,'PowerOutput']
-       y2 = df.loc[:,'solar']
-       y3 = df.loc[:,'battDischargeRate']
-       
-       y = np.vstack((y1,y2,y3))
-       pal = [colors[2],colors[4],colors[0]]
-       labels = ['Natural Gas','Solar PV','Battery']
-       y_label = "Generation\n(MW)"
-       # Don't label bottom
-       labelbottom = 'off'
-       
-    elif n==1:       
-       y1 = df.loc[:,'demand']
-       y2 = df.loc[:,'solar']-df.loc[:,'solarUsed']
-       y3 = df.loc[:,'battChargeRate']
-       
-       y = np.vstack((y1,y2,y3))
-       pal = [colors[1],colors[4],colors[0]]
-       
-#       y = np.vstack((y1,y3))
-#       pal = [colors[1],colors[0]]
-       
-       labels = ['Demand','Solar Curtailment','Battery']
-#       labels = ['Demand','Battery']
-       
-       y_label = 'Use\n(MW)'
-       # Don't label bottom
-       labelbottom = 'off'
-#       plt.tick_params(labelbottom='off')
-       
-    elif n==2:       
-       y = df.loc[:,'battCharge']/60.0
-       labels = ['Battery']
-       pal = [colors[0]]
-       y_label = 'Storage\n(MWh)'
-       labelbottom = 'on'
-
-    ax = plt.subplot(3 ,1, n + 1)
-   
-    if n==0 or n==1:
-       ax.stackplot(x, y, labels=labels,colors=pal)
-       ax.set_ylim(bottom=10.0,top = 50.0)
+for i in range(2):
+    
+    if i==0:
+        df = df1
     else:
-       ax.plot(x,y,label=labels[0])
-       ax.set_ylim(bottom=0.0,top = 30.0)
-#   plt.title(v)
-    ax.set_ylabel(y_label)
-    plt.xlim(left=t_start,right=t_end)
-   
-   # Legend
-    ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True)
-    box = ax.get_position()
-    ax.set_position([box.x0, box.y0 + box.height, box.width*0.8, box.height])
-    ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True)
+        df = df2
+    
+    for n in range(3):
+    
+        x = df.index/60.0
+        if n ==0:
+    
+           y1 = df.loc[:,'PowerOutput']
+           y2 = df.loc[:,'solar']
+           y3 = df.loc[:,'battDischargeRate']
+           
+           y = np.vstack((y1,y2,y3))
+           pal = [colors[2],colors[4],colors[0]]
+           labels = ['Natural Gas','Solar PV','Battery']
+           y_label = "Generation\n(MW)"
+           # Don't label bottom
+           labelbottom = 'off'
+           
+        elif n==1:       
+           y1 = df.loc[:,'demand']
+           y2 = df.loc[:,'solar']-df.loc[:,'solarUsed']
+           y3 = df.loc[:,'battChargeRate']
+           
+           y = np.vstack((y1,y2,y3))
+           pal = [colors[1],colors[4],colors[0]]
+                  
+           labels = ['Demand','Solar Curtailment','Battery']
+           
+           y_label = 'Use\n(MW)'
+           # Don't label bottom
+           labelbottom = 'off'
+           
+        elif n==2:       
+           y = df.loc[:,'battCharge']/60.0
+           labels = ['Battery']
+           pal = [colors[0]]
+           y_label = 'Storage\n(MWh)'
+           labelbottom = 'on'
+    
+        ax = plt.subplot(3 ,1, n + 1)
        
-    plt.tick_params(labelbottom=labelbottom)
+        if n==0 or n==1:
+           ax.stackplot(x, y, labels=labels,colors=pal)
+           ax.set_ylim(bottom=10.0,top = 50.0)
+        else:
+           ax.plot(x,y,label=labels[0])
+           ax.set_ylim(bottom=0.0,top = 30.0)
+    #   plt.title(v)
+        ax.set_ylabel(y_label)
+        plt.xlim(left=t_start,right=t_end)
        
-    # Set aspect ratio https://jdhao.github.io/2017/06/03/change-aspect-ratio-in-mpl/
-    ratio = 0.25
-    xleft, xright = ax.get_xlim() # the abs method is used to make sure that all numbers are positive
-    ybottom, ytop = ax.get_ylim() # because x and y axis of an axes maybe inversed.  
-    ax.set_aspect(abs((xright-xleft)/(ybottom-ytop))*ratio)
-       
-       # Caption labels
-    caption_labels = ['A','B','C','D','E','F']
-    plt.text(0.05, 0.85, caption_labels[n], horizontalalignment='center',verticalalignment='center', transform=ax.transAxes,fontsize='medium',fontweight='bold')
+       # Legend
+        ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True)
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height, box.width*0.8, box.height])
+        ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True)
+           
+        plt.tick_params(labelbottom=labelbottom)
+           
+        # Set aspect ratio https://jdhao.github.io/2017/06/03/change-aspect-ratio-in-mpl/
+        ratio = 0.25
+        xleft, xright = ax.get_xlim() # the abs method is used to make sure that all numbers are positive
+        ybottom, ytop = ax.get_ylim() # because x and y axis of an axes maybe inversed.  
+        ax.set_aspect(abs((xright-xleft)/(ybottom-ytop))*ratio)
+           
+           # Caption labels
+        caption_labels = ['A','B','C','D','E','F']
+        plt.text(0.05, 0.85, caption_labels[n], horizontalalignment='center',verticalalignment='center', transform=ax.transAxes,fontsize='medium',fontweight='bold')
 
 # Adjust layout
 plt.tight_layout()
@@ -455,8 +459,8 @@ df = df.assign(plantType=df.sheetname)
 #df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
-df.loc[(df.pct_solar == 0.513),'pct_solar']=1.0
-df.loc[(df.pct_solar == 32.3),'pct_solar']=63.0
+df.loc[(df.pct_solar == 0.635),'pct_solar']=1.0
+df.loc[(df.pct_solar == 32.635),'pct_solar']=63.0
 
 # Create Plots
 # https://stackoverflow.com/questions/20174468/how-to-create-subplots-of-pictures-made-with-the-hist-function-in-matplotlib-p
@@ -549,8 +553,8 @@ df = df.assign(plantType=df.sheetname)
 #df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
-df.loc[(df.pct_solar == 0.513),'pct_solar']=1.0
-df.loc[(df.pct_solar == 32.3),'pct_solar']=63.0
+df.loc[(df.pct_solar == 0.635),'pct_solar']=1.0
+df.loc[(df.pct_solar == 32.635),'pct_solar']=63.0
 
 # Create Plots
 f,a = plt.subplots(3,1,sharex=True,figsize=(5,5))
@@ -564,12 +568,13 @@ for idx,ax in enumerate(a):
         y_var = 'solarCurtail_pct'
         y_label = 'Curtailment (%)'
         y_convert  = [1.0]
-        ylims = [0,25]
+        ylims = [0,50]
     elif idx == 1:
         y_var = 'fuelCost_dollars'
         y_label = 'Fuel Cost (M$)'
         y_convert  = [1./1.E6]
-        ylims = [11,13] 
+#        ylims = [11,13] 
+        ylims = [4,6] 
     elif idx == 2:
         y_var = 'LCOE'
         y_label = 'LCOE ($/kWh)'
@@ -684,7 +689,7 @@ df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ df3.loc[:,'demand_hr']
 df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ 1000.0
 
 battSizes = [0.0,30.0]
-solarCaps = [0.513,32.3]
+solarCaps = [0.635,32.635]
 
 # Emissions Plot
 #plt.figure()

@@ -19,48 +19,52 @@ from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES
 # Record time to solve
 t0 = time.time()
 
-# Load_Data - Expected Columns (units): DatetimeUTC (UTC format), t (min), dt (min), demand (MW), solar (MW)
-filename = 'data063_Oct30th.csv'
-#filename = 'data063.csv'
-data = pd.read_csv(filename)
+minRanges = [30,60]
 
-# Solar Plant - All inputs are optional (default values shown below)
-solar = Solar(plantType = 'PV', capacity = 32.3, cost_install = 2004., cost_OM_fix = 22.02)
+for minRange in minRanges:
 
-# Battery Storage - All inputs are optional (default values shown below)
-batt = Battery(capacity = 30.0, rateMax= 30.0, roundTripEff = 85.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 0.0)
+    # Load_Data - Expected Columns (units): DatetimeUTC (UTC format), t (min), dt (min), demand (MW), solar (MW)
+    filename = 'data063_Oct30th.csv'
+    #filename = 'data063.csv'
+    data = pd.read_csv(filename)
 
-# Fuel - All inputs are optional (default values shown below)
-fuel = Fuel(fuelType='NATGAS',cost = 10.58,emissions = 0.18)
+    # Solar Plant - All inputs are optional (default values shown below)
+    solar = Solar(plantType = 'PV', capacity = 32.3, cost_install = 2004., cost_OM_fix = 22.02)
 
-# Create power plant
-    # 1 - create pandas series of power plant characteristics
-plant_inputs = defaultInputs(plantType = 'CCGT') # Start with CCGT default inputs and then adjust to specific case
-plant_inputs.plantType      = "sCO2"
-plant_inputs.Eff_A          = -5.60E-03
-plant_inputs.Eff_B          = 1.05E+00
-plant_inputs.Eff_C          = 5.00E+01
-plant_inputs.maxEfficiency  = 53.1
-plant_inputs.rampRate       = 50.0
-plant_inputs.minRange       = 30.0
-    # 2 - create power plant
-plant        = PowerPlant(plant_inputs)
+    # Battery Storage - All inputs are optional (default values shown below)
+    batt = Battery(capacity = 30.0, rateMax= 30.0, roundTripEff = 85.0, cost_install = 2067., cost_OM_fix = 35.6,initCharge = 0.0)
 
-# Create HRES (controller is built-in), data and plant are only required inputs, all other components will revert to default if not specified
-hres         = HRES(data,plant,solar=solar,batt=batt,fuel=fuel,i=0.02,n=20)
+    # Fuel - All inputs are optional (default values shown below)
+    fuel = Fuel(fuelType='NATGAS',cost = 10.58,emissions = 0.18)
 
-# Run Simulation
-results = hres.run()
+    # Create power plant
+        # 1 - create pandas series of power plant characteristics
+    plant_inputs = defaultInputs(plantType = 'CCGT') # Start with CCGT default inputs and then adjust to specific case
+    plant_inputs.plantType      = "sCO2"
+    plant_inputs.Eff_A          = -5.60E-03
+    plant_inputs.Eff_B          = 1.05E+00
+    plant_inputs.Eff_C          = 5.00E+01
+    plant_inputs.maxEfficiency  = 53.1
+    plant_inputs.rampRate       = 50.0
+    plant_inputs.minRange       = minRange
+        # 2 - create power plant
+    plant        = PowerPlant(plant_inputs)
 
-# Create Plots and save time series data
-saveName = 'Results_SampleDay_Oct30th_sCO2'
-hres.plot_battStatus(caseName = saveName)
-hres.plot_EBalance(caseName = saveName)
-hres.plot_efficiency(caseName = saveName)
-hres.plot_pwrRamps(caseName = saveName)
-hres.save(saveName)
-results.to_csv(saveName+'_Analysis.csv')
+    # Create HRES (controller is built-in), data and plant are only required inputs, all other components will revert to default if not specified
+    hres         = HRES(data,plant,solar=solar,batt=batt,fuel=fuel,i=0.02,n=20)
 
-# Display Elapsed Time
-t1 = time.time()
-print "Time Elapsed: " + str(round(t1-t0,2)) + " s"
+    # Run Simulation
+    results = hres.run()
+
+    # Create Plots and save time series data
+    saveName = 'Results_SampleDay_Oct30th_sCO2_' + str(minRange)
+    # hres.plot_battStatus(caseName = saveName)
+    hres.plot_EBalance(caseName = saveName)
+    # hres.plot_efficiency(caseName = saveName)
+    # hres.plot_pwrRamps(caseName = saveName)
+    hres.save(saveName)
+    results.to_csv(saveName+'_Analysis.csv')
+
+    # Display Elapsed Time
+    t1 = time.time()
+    print "Time Elapsed: " + str(round(t1-t0,2)) + " s"

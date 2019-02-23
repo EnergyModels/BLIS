@@ -9,4 +9,5 @@ setup(name='blis',
       license = 'MIT',
       packages=['blis'],
       zip_safe=False,
+      python_requires='~=2.7',
       install_requires=['pandas', 'numpy', 'matplotlib', 'seaborn','joblib'])
