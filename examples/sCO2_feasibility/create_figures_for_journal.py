@@ -26,6 +26,108 @@ colors = sns.color_palette("colorblind")
 DPI = 1000
 
 #%%=============================================================================#
+# Figure 5 - Control Scheme
+results_filename1 = "Results_SampleDay_Oct30th_sCO2_30.csv"
+results_filename2 = "Results_SampleDay_Oct30th_sCO2_60.csv"
+savename = "Fig5_ControlScheme.png"
+#=============================================================================#
+sns.set_style('white')
+# Customize Time Shown
+#file_t_start  = -4.0
+t_start = 4.0
+t_end   = 22.0
+
+# Import results
+df = pd.read_csv(results_filename1)
+#df2 = pd.read_csv(results_filename2)
+
+#f,a=plt.subplots(nrows=3,ncols=2,sharex=True)
+#count = 0    
+for n in range(3):
+
+    x = df.index/60.0
+    if n ==0:
+
+       y1 = df.loc[:,'PowerOutput']
+       y2 = df.loc[:,'solar']
+       y3 = df.loc[:,'battDischargeRate']
+       
+       y = np.vstack((y1,y2,y3))
+       pal = [colors[2],colors[1],colors[0]]
+       labels = ['Natural Gas','Solar PV','Battery']
+       y_label = "Generation (MW)"
+       # Don't label bottom
+       labelbottom = 'off'
+       yticks = [10,30,50]
+       
+    elif n==1:       
+       y1 = df.loc[:,'demand']
+       y2 = df.loc[:,'solar']-df.loc[:,'solarUsed']
+       y3 = df.loc[:,'battChargeRate']
+#       y4 = df.loc[:,'loadShed']
+       
+#       y = np.vstack((y1,y2,y3,y4))
+       y = np.vstack((y1,y2,y3))
+       pal = [colors[7],colors[1],colors[0],colors[2]]
+              
+       labels = ['Demand','Solar Curtailment','Battery','NG Load Shed']
+       
+       y_label = 'Use (MW)'
+       # Don't label bottom
+       labelbottom = 'off'
+       yticks = [10,30,50]
+       
+    elif n==2:       
+       y = df.loc[:,'battCharge']/60.0
+       labels = ['Battery']
+       pal = [colors[0]]
+       y_label = 'Storage (MWh)'
+       labelbottom = 'on'
+       yticks = [0,20,40]
+
+    ax = plt.subplot(3 ,1, n ++ 1)
+#    ax = a[n][i]
+   
+    if n==0 or n==1:
+       ax.stackplot(x, y, labels=labels,colors=pal)
+       ax.set_ylim(bottom=10.0,top = 50.0)
+    else:
+       ax.plot(x,y,label=labels[0])
+       ax.set_ylim(bottom=0.0,top = 30.0)
+#   plt.title(v)
+    ax.set_ylabel(y_label)
+    plt.xlim(left=t_start,right=t_end)
+   
+   # Legend
+    ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True)
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height, box.width*0.8, box.height])
+    ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True,fontsize=12)
+#    ax.legend(loc='left',ncol=len(labels),fancybox=True)
+       
+    plt.tick_params(labelbottom=labelbottom)
+    
+    if len(yticks)>2:
+        ax.set_yticks(yticks)
+       
+    # Set aspect ratio https://jdhao.github.io/2017/06/03/change-aspect-ratio-in-mpl/
+    ratio = 0.25
+    xleft, xright = ax.get_xlim() # the abs method is used to make sure that all numbers are positive
+    ybottom, ytop = ax.get_ylim() # because x and y axis of an axes maybe inversed.  
+    ax.set_aspect(abs((xright-xleft)/(ybottom-ytop))*ratio)
+       
+       # Caption labels
+    caption_labels = ['A','B','C','D','E','F']
+    plt.text(0.05, 0.85, caption_labels[n], horizontalalignment='center',verticalalignment='center', transform=ax.transAxes,fontsize='medium',fontweight='bold')
+#    count = count + 1
+# Adjust layout
+plt.tight_layout()
+
+# Save Figure
+plt.savefig(savename,dpi=DPI,bbox_inches="tight")
+plt.close()
+
+#%%=============================================================================#
 # Figure 6 - LCOE
 results_filename = "results_monte_carlo.csv"
 savename = "Fig6_LCOE.png"
@@ -84,14 +186,16 @@ for idx,ax in enumerate(a):
     for plantType in plantTypes:
         # Set Color and label
         if plantType =='sCO2':
-            color =     colors[0]
+            color =     colors[1]
             label = 'sCO$_2$'
         elif plantType =='OCGT':
-            color = colors[1]
+            color = colors[0]
             label = 'OCGT'
         elif plantType =='CCGT':
             color = colors[2]
             label = 'CCGT'
+        
+        
         # Plot
         df2 = df[(df.plantType == plantType) &(df.pct_solar == pct_solar) & (df.battSize_MW == battSize)]
         
@@ -120,7 +224,7 @@ for idx,ax in enumerate(a):
         ax.get_xaxis().set_visible(False)
 
     # Set Y-limits
-    ax.set_ylim(top=30)
+    ax.set_ylim(top=55)
 
     # Legend
 #    ax.legend()
@@ -144,9 +248,82 @@ plt.close()
 df_stats = pd.DataFrame(stats)
 
 #%%=============================================================================#
-# Figure 7 - sCO2 Sensitivity
+# Figure 7 - Time of Day Emissions
 results_filename = "results_monte_carlo.csv"
-savename = "Fig7_sCO2_Sensitivity.png"
+savename_emissions = "Fig7_TOD_Emissions.png"
+#=============================================================================#
+sns.set_style("white")
+
+df_raw = pd.read_csv(results_filename)
+
+# Create series for plantType
+labels = {'OCGT': 'OCGT','CCGT': 'CCGT','sCO2': 'sCO$_2$','sCO2_CCS': '$sCO_2+CCS$', 'CCGT_CCS': '$CCGT+CCS$',}
+df_raw = df_raw.assign(plantType=df_raw.sheetname)
+for key in labels.keys():
+    df_raw.loc[(df_raw.plantType == key), 'Plant'] = labels[key]
+
+# Filter Results
+df = df_raw[(df_raw.LCOE > 0) & (df_raw.emissions_tons > 0) & (df_raw.gridUsed_MWh < 0.01)]
+
+# Wide to long
+df['id'] = df.index
+df2 = pd.wide_to_long(df, stubnames=['emissions_hr','demand_hr','costs_hr'], i=['sheetname','id'], j='hr')
+df3 = df2.reset_index()
+
+# Normalize emisssions and costs by demand
+df3.loc[:,'emissions_hr'] = df3.loc[:,'emissions_hr'] / df3.loc[:,'demand_hr']
+df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ df3.loc[:,'demand_hr']
+
+# Convert costs from $/MWh to $/kWh
+df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ 1000.0
+
+battSizes = [0.0,30.0]
+solarCaps = [0.635,32.635]
+
+# Emissions Plot
+count = 0
+f,axes = plt.subplots(2,2,sharex=True,sharey=True)#,figsize=(5,5))
+for i in range(2):
+    for j in range(2):
+        battSize = battSizes[i]
+        solarCap = solarCaps[j]
+        data = df3[(df3.battSize_MW == battSize) & (df3.solarCapacity_MW == solarCap)]
+        if i==1 and j==1:
+            legend = 'brief'
+            ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',hue_order=['OCGT','CCGT','sCO$_2$'],palette=[colors[0],colors[2],colors[1]],data=data,ax=axes[i, j],legend=legend,ci=95)
+            handles, labels = ax.get_legend_handles_labels()
+#            leg = ax.legend(handles[1:],labels[1:])
+            leg = ax.legend(handles[1:],labels[1:],bbox_to_anchor=(0.6, -0.3),ncol=4)
+            leg.set_title('')
+#            ax.legend().set_title('')
+        else:
+            legend = False
+            ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',hue_order=['OCGT','CCGT','sCO$_2$'],palette=[colors[0],colors[2],colors[1]],data=data,ax=axes[i, j],legend=legend,ci=95)
+#            ax.legend().set_title('')
+        ax.set_xlabel('Time of Day (hr)')
+        ax.set_ylabel('Emissions (tons/kWh)')
+
+#        ax.set_xlim(right=24)
+        
+
+        # Caption labels
+        caption_labels = ['A', 'B', 'C', 'D', 'E', 'F']
+        ax.text(0.1, 0.9, caption_labels[count], horizontalalignment='center', verticalalignment='center',
+                 transform=ax.transAxes, fontsize='medium', fontweight='bold')
+        count = count + 1
+
+ax.xaxis.set_ticks([0,6,12,18,24])
+
+f.subplots_adjust(bottom=0.2)
+plt.savefig(savename_emissions,dpi=DPI,bbox_extra_artists=(leg))
+#plt.tight_layout()
+plt.close()
+
+
+#%%=============================================================================#
+# Figure 8 - sCO2 Sensitivity
+results_filename = "results_monte_carlo.csv"
+savename = "Fig8_sCO2_Sensitivity.png"
 #=============================================================================#
 sns.set_style('white')
 
@@ -257,7 +434,7 @@ for idx,ax in enumerate(a):
     # Legend (only for middle bottom)
     if idx==4:
 #        ax.legend(bbox_to_anchor=(2.6, -0.4),ncol=3)
-        ax.legend(bbox_to_anchor=(2.6, -0.4),ncol=3, prop={'size': 12})
+        ax.legend(bbox_to_anchor=(2.4, -0.2),ncol=3, prop={'size': 12})
                 
     # Caption labels
     caption_labels = ['A','B','C','D','E','F']
@@ -270,16 +447,11 @@ plt.tight_layout()
 plt.savefig(savename,dpi=DPI,bbox_inches="tight")
 plt.close()
 #%%=============================================================================#
-# Figure 8 - Ramp Rate Sensitivity
-results_filename = "results_sweep_rampRate.csv"  # 63% solar
-#results_filename2 = "Results_MonteCarlo3.csv"  # 1% solar
-savename = "Fig8_RampRate_Deficit.png"
+# Figure 9 - Ramp Rate Sensitivity
+results_filename = "results_sweep_rampRate.csv"
+savename = "Fig9_RampRate_Deficit.png"
 #=============================================================================#
 sns.set_style('white')
-# Import results
-#df1 = pd.read_csv(results_filename1)
-#df2 = pd.read_csv(results_filename2)
-#df = pd.concat([df1,df2],axis=0)
 
 df = pd.read_csv(results_filename)
 
@@ -345,102 +517,7 @@ plt.tight_layout()
 plt.savefig(savename,dpi=DPI,bbox_inches="tight")
 plt.close()
 
-#%%=============================================================================#
-# Figure 9 - Control Scheme
-results_filename1 = "Results_SampleDay_Oct30th_sCO2_30.csv"
-results_filename2 = "Results_SampleDay_Oct30th_sCO2_60.csv"
-savename = "Fig9_ControlScheme.png"
-#=============================================================================#
-sns.set_style('whitegrid')
-# Customize Time Shown
-#file_t_start  = -4.0
-t_start = 7.0
-t_end   = 22.0
 
-# Import results
-df1 = pd.read_csv(results_filename)
-df2 = pd.read_csv(results_filename)
-
-for i in range(2):
-    
-    if i==0:
-        df = df1
-    else:
-        df = df2
-    
-    for n in range(3):
-    
-        x = df.index/60.0
-        if n ==0:
-    
-           y1 = df.loc[:,'PowerOutput']
-           y2 = df.loc[:,'solar']
-           y3 = df.loc[:,'battDischargeRate']
-           
-           y = np.vstack((y1,y2,y3))
-           pal = [colors[2],colors[4],colors[0]]
-           labels = ['Natural Gas','Solar PV','Battery']
-           y_label = "Generation\n(MW)"
-           # Don't label bottom
-           labelbottom = 'off'
-           
-        elif n==1:       
-           y1 = df.loc[:,'demand']
-           y2 = df.loc[:,'solar']-df.loc[:,'solarUsed']
-           y3 = df.loc[:,'battChargeRate']
-           
-           y = np.vstack((y1,y2,y3))
-           pal = [colors[1],colors[4],colors[0]]
-                  
-           labels = ['Demand','Solar Curtailment','Battery']
-           
-           y_label = 'Use\n(MW)'
-           # Don't label bottom
-           labelbottom = 'off'
-           
-        elif n==2:       
-           y = df.loc[:,'battCharge']/60.0
-           labels = ['Battery']
-           pal = [colors[0]]
-           y_label = 'Storage\n(MWh)'
-           labelbottom = 'on'
-    
-        ax = plt.subplot(3 ,1, n + 1)
-       
-        if n==0 or n==1:
-           ax.stackplot(x, y, labels=labels,colors=pal)
-           ax.set_ylim(bottom=10.0,top = 50.0)
-        else:
-           ax.plot(x,y,label=labels[0])
-           ax.set_ylim(bottom=0.0,top = 30.0)
-    #   plt.title(v)
-        ax.set_ylabel(y_label)
-        plt.xlim(left=t_start,right=t_end)
-       
-       # Legend
-        ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True)
-        box = ax.get_position()
-        ax.set_position([box.x0, box.y0 + box.height, box.width*0.8, box.height])
-        ax.legend(loc='center left',bbox_to_anchor=(1.0, 0.5),fancybox=True)
-           
-        plt.tick_params(labelbottom=labelbottom)
-           
-        # Set aspect ratio https://jdhao.github.io/2017/06/03/change-aspect-ratio-in-mpl/
-        ratio = 0.25
-        xleft, xright = ax.get_xlim() # the abs method is used to make sure that all numbers are positive
-        ybottom, ytop = ax.get_ylim() # because x and y axis of an axes maybe inversed.  
-        ax.set_aspect(abs((xright-xleft)/(ybottom-ytop))*ratio)
-           
-           # Caption labels
-        caption_labels = ['A','B','C','D','E','F']
-        plt.text(0.05, 0.85, caption_labels[n], horizontalalignment='center',verticalalignment='center', transform=ax.transAxes,fontsize='medium',fontweight='bold')
-
-# Adjust layout
-plt.tight_layout()
-
-# Save Figure
-plt.savefig(savename,dpi=DPI,bbox_inches="tight")
-plt.close()
 
 #%%=============================================================================#
 # Figure 10 - Curtailment
@@ -488,17 +565,17 @@ for idx,ax in enumerate(a):
         battSize = 30.0   
     
     # Organize row/columns based on pct_solar and battSize
-    plantTypes = ['sCO2','OCGT','CCGT']
+    plantTypes = ['OCGT','CCGT','sCO2']
 
     # Plot
     for plantType in plantTypes:
         # Set Color
         
         if plantType =='sCO2':
-            color = colors[0]
+            color = colors[1]
             label = 'sCO$_2$'
         elif plantType =='OCGT':
-            color = colors[1]
+            color = colors[0]
             label = 'OCGT'
         elif plantType =='CCGT':
             color = colors[2]
@@ -548,9 +625,6 @@ df = pd.read_csv(results_filename)
 # Prepare results for plotting
     # Create series for plantType
 df = df.assign(plantType=df.sheetname)
-#df.loc[(df.plantType == 'OCGT_Batt'),'plantType']='OCGT'
-#df.loc[(df.plantType == 'CCGT_Batt'),'plantType']='CCGT'
-#df.loc[(df.plantType == 'sCO2_Batt'),'plantType']='sCO2'
     # Create series for pct_solar
 df = df.assign(pct_solar=df.solarCapacity_MW)
 df.loc[(df.pct_solar == 0.635),'pct_solar']=1.0
@@ -654,92 +728,3 @@ for idx,ax in enumerate(a):
 # Save Figure
 plt.savefig(savename,dpi=DPI,bbox_inches="tight")
 plt.close()
-
-
-
-#%%=============================================================================#
-# Figure 12 and 13 - Time of Day Emissions and Costs
-results_filename = "results_monte_carlo.csv"
-savename_emissions = "Fig12_TOD_Emissions.png"
-savename_costs = "Fig13_TOD_Costs.png"
-#=============================================================================#
-sns.set_style("darkgrid")
-
-df_raw = pd.read_csv(results_filename)
-
-# Create series for plantType
-labels = {'OCGT': '$OCGT$','CCGT': '$CCGT$','sCO2': '$sCO_2$','sCO2_CCS': '$sCO_2+CCS$', 'CCGT_CCS': '$CCGT+CCS$',}
-df_raw = df_raw.assign(plantType=df_raw.sheetname)
-for key in labels.keys():
-    df_raw.loc[(df_raw.plantType == key), 'Plant'] = labels[key]
-
-# Filter Results
-df = df_raw[(df_raw.LCOE > 0) & (df_raw.emissions_tons > 0) & (df_raw.gridUsed_MWh < 0.01)]
-
-# Wide to long
-df['id'] = df.index
-df2 = pd.wide_to_long(df, stubnames=['emissions_hr','demand_hr','costs_hr'], i=['sheetname','id'], j='hr')
-df3 = df2.reset_index()
-
-# Normalize emisssions and costs by demand
-df3.loc[:,'emissions_hr'] = df3.loc[:,'emissions_hr'] / df3.loc[:,'demand_hr']
-df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ df3.loc[:,'demand_hr']
-
-# Convert costs from $/MWh to $/kWh
-df3.loc[:,'costs_hr'] = df3.loc[:,'costs_hr']/ 1000.0
-
-battSizes = [0.0,30.0]
-solarCaps = [0.635,32.635]
-
-# Emissions Plot
-#plt.figure()
-f,axes = plt.subplots(2,2,sharex=True,sharey=True)#,figsize=(5,5))
-for i in range(2):
-    for j in range(2):
-        battSize = battSizes[i]
-        solarCap = solarCaps[j]
-        data = df3[(df3.battSize_MW == battSize) & (df3.solarCapacity_MW == solarCap)]
-        if i==1 and j==1:
-            legend = 'brief'
-            ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=data,ax=axes[i, j],legend=legend)
-            handles, labels = ax.get_legend_handles_labels()
-#            leg = ax.legend(handles[1:],labels[1:])
-            leg = ax.legend(handles[1:],labels[1:],bbox_to_anchor=(0.6, -0.3),ncol=4)
-            leg.set_title('')
-#            ax.legend().set_title('')
-        else:
-            legend = False
-            ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',data=data,ax=axes[i, j],legend=legend)
-#            ax.legend().set_title('')
-        ax.set_xlabel('Time of Day (hr)')
-        ax.set_ylabel('Emissions (tons/kWh)')
-
-        # Caption labels
-        caption_labels = ['A', 'B', 'C', 'D', 'E', 'F']
-        ax.text(0.1, 0.9, caption_labels[i+j+i*j], horizontalalignment='center', verticalalignment='center',
-                 transform=ax.transAxes, fontsize='medium', fontweight='bold')
-
-f.subplots_adjust(bottom=0.2)
-plt.savefig(savename_emissions,dpi=DPI,bbox_extra_artists=(leg))
-#plt.tight_layout()
-plt.close()
-#
-## Costs Plot
-##plt.figure()
-#f,axes = plt.subplots(2,2,sharex=True,sharey=True)#,figsize=(5,5))
-#for i in range(2):
-#    for j in range(2):
-#        battSize = battSizes[i]
-#        solarCap = solarCaps[j]
-#        data = df3[(df3.battSize_MW == battSize) & (df3.solarCapacity_MW == solarCap)]
-#        ax = sns.lineplot(x='hr',y='costs_hr',hue='Plant',data=data,ax=axes[i, j],legend=False)
-#        ax.set_xlabel('Time of Day (hr)')
-#        ax.set_ylabel('Fuel Costs ($/kWh)')
-#
-#        # Caption labels
-#        caption_labels = ['A', 'B', 'C', 'D', 'E', 'F']
-#        ax.text(0.1, 0.9, caption_labels[i+j+i*j], horizontalalignment='center', verticalalignment='center',
-#                 transform=ax.transAxes, fontsize='medium', fontweight='bold')
-#plt.savefig(savename_costs,dpi=DPI)
-#plt.tight_layout()
-#plt.close()

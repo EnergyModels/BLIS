@@ -59,11 +59,11 @@ for minRange in minRanges:
     # Create Plots and save time series data
     saveName = 'Results_SampleDay_Oct30th_sCO2_' + str(minRange)
     # hres.plot_battStatus(caseName = saveName)
-    hres.plot_EBalance(caseName = saveName)
+    # hres.plot_EBalance(caseName = saveName)
     # hres.plot_efficiency(caseName = saveName)
     # hres.plot_pwrRamps(caseName = saveName)
     hres.save(saveName)
-    results.to_csv(saveName+'_Analysis.csv')
+    # results.to_csv(saveName+'_Analysis.csv')
 
     # Display Elapsed Time
     t1 = time.time()
