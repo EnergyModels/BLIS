@@ -122,6 +122,7 @@ plt.plot(yr, ng_act, label = 'Natural Gas',color=colors[0],marker='.',linestyle=
 plt.plot(yr, solar_act, label = 'Solar',color=colors[1],marker='.',linestyle='None',markersize=15)
 plt.plot(yr_proj, ng_proj,color=colors[0],linestyle='--',linewidth=2.5)
 plt.plot(yr_proj[ind:], solar_proj[ind:], color=colors[1],linestyle='--',linewidth=2.5)
+plt.plot([2009,2026],[5,5], color=colors[1],label='VA Solar Target',linestyle='-',linewidth=2.5)
 
 plt.xlim(left=2009,right=2025)
 plt.ylim(bottom=0,top=20)

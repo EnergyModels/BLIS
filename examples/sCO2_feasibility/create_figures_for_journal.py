@@ -223,8 +223,24 @@ for idx,ax in enumerate(a):
     else:
         ax.get_xaxis().set_visible(False)
 
+    # Y-Label
+    if idx==0 or idx==2:
+        ax.set_ylabel("Event Count")
+
     # Set Y-limits
     ax.set_ylim(top=55)
+
+    # Additional Labels
+    if idx == 0:
+        ax.text(0.5, 1.1, 'No Battery', horizontalalignment='center', verticalalignment='top', transform=ax.transAxes)
+    elif idx == 1:
+        ax.text(0.5, 1.1, '30 MWh Battery', horizontalalignment='center', verticalalignment='top',
+                transform=ax.transAxes)
+        ax.text(1.1, 0.5, '1% Solar', horizontalalignment='center', verticalalignment='center',
+                rotation=270, transform=ax.transAxes)
+    elif idx == 3:
+        ax.text(1.1, 0.5, '63% Solar', horizontalalignment='center', verticalalignment='center',
+                rotation=270, transform=ax.transAxes)
 
     # Legend
 #    ax.legend()
@@ -246,6 +262,7 @@ plt.close()
 
 # Collect statistics
 df_stats = pd.DataFrame(stats)
+df_stats.to_csv('stats.csv')
 
 #%%=============================================================================#
 # Figure 7 - Time of Day Emissions
@@ -285,15 +302,15 @@ count = 0
 f,axes = plt.subplots(2,2,sharex=True,sharey=True)#,figsize=(5,5))
 for i in range(2):
     for j in range(2):
-        battSize = battSizes[i]
-        solarCap = solarCaps[j]
+        battSize = battSizes[j]
+        solarCap = solarCaps[i]
         data = df3[(df3.battSize_MW == battSize) & (df3.solarCapacity_MW == solarCap)]
         if i==1 and j==1:
             legend = 'brief'
             ax = sns.lineplot(x='hr',y='emissions_hr',hue='Plant',hue_order=['OCGT','CCGT','sCO$_2$'],palette=[colors[0],colors[2],colors[1]],data=data,ax=axes[i, j],legend=legend,ci=95)
             handles, labels = ax.get_legend_handles_labels()
 #            leg = ax.legend(handles[1:],labels[1:])
-            leg = ax.legend(handles[1:],labels[1:],bbox_to_anchor=(0.6, -0.3),ncol=4)
+            leg = ax.legend(handles[1:],labels[1:],bbox_to_anchor=(0.9, -0.3),ncol=3)
             leg.set_title('')
 #            ax.legend().set_title('')
         else:
@@ -312,7 +329,22 @@ for i in range(2):
                  transform=ax.transAxes, fontsize='medium', fontweight='bold')
         count = count + 1
 
+        # Additional Labels
+        if j == 0 and i==0:
+            ax.text(0.5, 1.1, 'No Battery', horizontalalignment='center', verticalalignment='top',
+                    transform=ax.transAxes)
+        elif j == 1 and i==0:
+            ax.text(0.5, 1.1, '30 MWh Battery', horizontalalignment='center', verticalalignment='top',
+                    transform=ax.transAxes)
+        if i==0 and j==1:
+            ax.text(1.1, 0.5, '1% Solar', horizontalalignment='center', verticalalignment='center',
+                    rotation=270, transform=ax.transAxes)
+        elif i == 1 and j==1:
+            ax.text(1.1, 0.5, '63% Solar', horizontalalignment='center', verticalalignment='center',
+                    rotation=270, transform=ax.transAxes)
+
 ax.xaxis.set_ticks([0,6,12,18,24])
+ax.yaxis.set_ticks([0.2,0.3,0.4,0.5,0.6])
 
 f.subplots_adjust(bottom=0.2)
 plt.savefig(savename_emissions,dpi=DPI,bbox_extra_artists=(leg))
@@ -541,7 +573,7 @@ df.loc[(df.pct_solar == 32.635),'pct_solar']=63.0
 
 # Create Plots
 # https://stackoverflow.com/questions/20174468/how-to-create-subplots-of-pictures-made-with-the-hist-function-in-matplotlib-p
-f,a = plt.subplots(2,2,sharex=True, sharey=True)#, figsize = (6,3) )
+f,a = plt.subplots(2,2,sharex=True)#, sharey=True)#, figsize = (6,3) )
 a = a.ravel()
 
 for idx,ax in enumerate(a):
@@ -550,12 +582,13 @@ for idx,ax in enumerate(a):
     if idx == 0 or idx == 2:
         y_var = 'solarCurtail_pct'
         y_label = 'Solar Curtailment (%)'
-        y_convert  = 1.0        
+        y_convert  = 1.0
+        ylims = [0,25]
     elif idx == 1 or idx == 3:    
         y_var = 'loadShed_pct_energy'
         y_label = 'Natural Gas Load Shed (%)'
         y_convert  = 1.
-
+        ylims = [0, 100]
     # Configurations
     if idx == 0 or idx == 1:
         pct_solar = 63.0
@@ -598,7 +631,21 @@ for idx,ax in enumerate(a):
         ax.set_xlabel(y_label)
     else:
         ax.get_xaxis().set_visible(False)
-       
+
+    # Y-axis limits
+    ax.set_ylim(bottom=ylims[0], top=ylims[1])
+
+    ax.set_ylabel("Event Count")
+
+    # Additional Labels
+    if idx==1:
+        ax.text(1.1, 0.5, 'No Battery', horizontalalignment='center', verticalalignment='center',
+                rotation=270, transform=ax.transAxes)
+    elif idx == 3:
+        ax.text(1.1, 0.5, '30 MWh Battery', horizontalalignment='center', verticalalignment='center',
+                rotation=270, transform=ax.transAxes)
+
+
     # Caption labels
     caption_labels = ['A','B','C','D','E','F']
     plt.text(0.12, 0.9, caption_labels[idx], horizontalalignment='center',verticalalignment='center', transform=ax.transAxes,fontsize='medium',fontweight='bold')
@@ -727,4 +774,4 @@ for idx,ax in enumerate(a):
 
 # Save Figure
 plt.savefig(savename,dpi=DPI,bbox_inches="tight")
-plt.close()
+#plt.close()
