@@ -23,7 +23,7 @@ import numpy as np
 # Set Color Palette
 colors = sns.color_palette("colorblind")
 # Set resolution for saving figures
-DPI = 1000
+DPI = 1200
 
 #%%=============================================================================#
 # Figure 5 - Control Scheme
@@ -460,18 +460,20 @@ for idx,ax in enumerate(a):
     #Y-axis labels (Only left side)
     if idx == 0 or idx==3:  
         ax.set_ylabel(y_label)
-#    else:
-#        ax.get_yaxis().set_visible(False)
+        ax.yaxis.set_label_coords(-0.25, 0.5)
+    else:
+       ax.get_yaxis().set_visible(False)
 
     # Legend (only for middle bottom)
     if idx==4:
 #        ax.legend(bbox_to_anchor=(2.6, -0.4),ncol=3)
-        ax.legend(bbox_to_anchor=(2.4, -0.2),ncol=3, prop={'size': 12})
+        ax.legend(bbox_to_anchor=(2.2, -0.2),ncol=3, prop={'size': 12})
                 
     # Caption labels
     caption_labels = ['A','B','C','D','E','F']
     plt.text(0.1, 0.9, caption_labels[idx], horizontalalignment='center',verticalalignment='center', transform=ax.transAxes,fontsize='medium',fontweight='bold')
-        
+
+
 # Adjust layout
 plt.tight_layout()
 
@@ -510,12 +512,12 @@ xlims = [0,30]
 
 #  Configurations
 plantTypes = ['sCO2','sCO2','sCO2']
-battSizes   = [0.0,0.0,30.0]
+battSizes   = [0.0,30.0,0.0]
 pct_solars  = [1.0,63.0,63.0]
 # Corresponding labels, colors, and marker size
-labels     = ['1% Solar w/o Batt','63% Solar w/o Batt','63% Solar 30.0 MWh Batt']
-dot_colors = [colors[0],colors[2],colors[1]]
-markers    = ['o','x','+']
+labels     = ['1% Solar w/o Batt','63% Solar 30.0 MWh Batt','63% Solar w/o Batt']
+dot_colors = [colors[0],colors[1],colors[2]]
+markers    = ['o','+','x']
 
 # Plot by configuration
 for plantType,battSize,pct_solar,label,dot_color,marker in zip(plantTypes,battSizes,pct_solars,labels,dot_colors,markers):
@@ -750,6 +752,7 @@ for idx,ax in enumerate(a):
     #Y-axis labels (Only left side)
 #    if idx == 0 or idx==3:  
     ax.set_ylabel(y_label)
+    ax.yaxis.set_label_coords(-0.15, 0.5)
 #    else:
 #        ax.get_yaxis().set_visible(False)
 
