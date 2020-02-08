@@ -2,7 +2,7 @@
 #BLIS - Balancing Load of Intermittent Solar:
 #A characteristic-based transient power plant model
 
-Copyright (C) 2018. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
+Copyright (C) 2019. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -54,6 +54,11 @@ File Overview:
 		2) sbgs - solar-battery-grid system
 		    same test files as hres, for a different energy system
 		    
-		3) sCO2_feasibility - coming soon
+		3) sCO2_feasibility - scripts and code used for the study "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143
+		
+		
+		4) sCO2_feasibility_results - same as #3, with the results of the simulations provided as .csv files
+		
+		5) preprocess_solar - supporting scripts for #3 which process solar data into a form useable by BLIS
 		
 ---

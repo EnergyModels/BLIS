@@ -15,7 +15,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 import pandas as pd
 
 # Data-file details
-filename = "PVLibSolarDataForJeffv6.csv"
+filename = "PVLibSolarData.csv"
 timezone_original = 'UTC'
 timezone_new = 'US/Eastern'
 
