@@ -1,0 +1,11 @@
+name: blis-py3
+channels:
+    - defaults
+    - conda-forge
+dependencies:
+    - python=3.7.3
+    - matplotlib
+    - pandas
+    - numpy
+    - seaborn
+    - joblib

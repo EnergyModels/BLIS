@@ -1,6 +1,7 @@
 
 #BLIS - Balancing Load of Intermittent Solar:
-#A characteristic-based transient power plant model
+
+## A characteristic-based transient power plant model
 
 Copyright (C) 2019. University of Virginia Licensing & Ventures Group (UVA LVG). All Rights Reserved.
 
@@ -14,10 +15,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 Requirements:
 
-	Python 2.7 with the following libraries:
+	Python 3.7 with the following libraries:
 		pandas
 		numpy
-		multiprocessing
 		joblib
 		seaborn
 		matplotlib
@@ -26,12 +26,12 @@ Requirements:
 ---
 
 To install:
-    1) Git clone to desired directory or download from git website and unzip
-    2) Open anaconda2 prompt (or other package manager)
-    3) Change directory to within blis folder such that "blis" and "examples" are subdirectories
-    4) 'pip install .'
-    5) Open an example file and run in a python environment
-    
+1) Git clone to desired directory or download from git website and unzip
+2) Open anaconda2 prompt (or other package manager)
+3) Change directory to within blis folder such that "blis" and "examples" are subdirectories
+4) 'pip install .'
+5) Open an example file and run in a python environment
+ 
 ---
 
 File Overview:
@@ -54,11 +54,15 @@ File Overview:
 		2) sbgs - solar-battery-grid system
 		    same test files as hres, for a different energy system
 		    
-		3) sCO2_feasibility - scripts and code used for the study "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143
+		3) preprocess_solar - supporting scripts which process solar data into a form useable by BLIS
 		
+	projects
+	    3) sCO2_feasibility - scripts and code used for the study "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143
 		
-		4) sCO2_feasibility_results - same as #3, with the results of the simulations provided as .csv files
-		
-		5) preprocess_solar - supporting scripts for #3 which process solar data into a form useable by BLIS
+        4) sCO2_feasibility_results - same as #3, with the results of the simulations provided as .csv files
 		
 ---
+
+Release history:
+V1.0 - Uses Python 2.7, version used in "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143
+V2.0.0 - Updated to for Python 3.7

@@ -1,7 +1,8 @@
 from setuptools import setup
 
 setup(name='blis',
-      version='0.1',
+      version='2.0.0',
+      python_requires='>=3.7.3',
       description='BLIS - Balancing Load of Intermittent Solar: A characteristic-based transient power plant model',
       url='https://github.com/EnergyModels/blis',
       author='Jeff Bennett',
@@ -9,5 +10,4 @@ setup(name='blis',
       license = 'MIT',
       packages=['blis'],
       zip_safe=False,
-      python_requires='~=2.7',
-      install_requires=['pandas', 'numpy', 'matplotlib', 'seaborn','joblib'])
+      install_requires=['pandas', 'numpy', 'matplotlib', 'seaborn', 'joblib'])

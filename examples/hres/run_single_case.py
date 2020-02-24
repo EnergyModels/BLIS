@@ -1,4 +1,4 @@
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 """
 BLIS - Balancing Load of Intermittent Solar:
 A characteristic-based transient power plant model
@@ -11,7 +11,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 import pandas as pd
 import time
 from blis import defaultInputs, PowerPlant, Solar, Fuel, Battery, HRES
@@ -24,34 +24,35 @@ filename = 'data063_Oct30th.csv'
 data = pd.read_csv(filename)
 
 # Solar Plant - All inputs are optional (default values shown below)
-solar = Solar(plantType = 'PV', capacity = 32.3, cost_install = 2004., cost_OM_fix = 22.02)
+solar = Solar(plantType='PV', capacity=32.3, cost_install=2004., cost_OM_fix=22.02)
 
 # Battery Storage - All inputs are optional (default values shown below)
-batt = Battery(capacity = 30.0, rateMax= 30.0, roundTripEff = 90.0, cost_install = 2067., cost_OM_fix = 35.6)
+batt = Battery(capacity=30.0, rateMax=30.0, roundTripEff=90.0, cost_install=2067., cost_OM_fix=35.6)
 
 # Fuel - All inputs are optional (default values shown below)
-fuel = Fuel(fuelType='NATGAS',cost = 23.27,emissions = 0.18)
+fuel = Fuel(fuelType='NATGAS', cost=23.27, emissions=0.18)
 
 # Create power plant
-    # 1 - create pandas series of power plant characteristics
-plant_inputs = defaultInputs(plantType = 'CCGT') # CCGT(default) or OCGT (Combined Cycle Gas Turbine or Open Cycle Gas Turbine)
-    # 2 - create power plant
+# 1 - create pandas series of power plant characteristics
+plant_inputs = defaultInputs(
+    plantType='CCGT')  # CCGT(default) or OCGT (Combined Cycle Gas Turbine or Open Cycle Gas Turbine)
+# 2 - create power plant
 plant = PowerPlant(plant_inputs)
 
 # Create HRES (controller is built-in), data and plant are only required inputs, all other components will revert to default if not specified
-hres = HRES(data,plant,solar=solar,batt=batt,fuel=fuel,i=0.02,n=20)
+hres = HRES(data, plant, solar=solar, batt=batt, fuel=fuel, i=0.02, n=20)
 
 # Run Simulation
 results = hres.run()
 
 # Create Plots and save time series data
 saveName = 'Results_SampleDay_Oct30th'
-hres.plot_battStatus(caseName = saveName)
-hres.plot_EBalance(caseName = saveName)
-hres.plot_efficiency(caseName = saveName)
-hres.plot_pwrRamps(caseName = saveName)
+hres.plot_battStatus(caseName=saveName)
+hres.plot_EBalance(caseName=saveName)
+hres.plot_efficiency(caseName=saveName)
+hres.plot_pwrRamps(caseName=saveName)
 hres.save(saveName)
 
 # Display Elapsed Time
 t1 = time.time()
-print "Time Elapsed: " + str(round(t1-t0,2)) + " s"
+print("Time Elapsed: " + str(round(t1 - t0, 2)) + " s")
