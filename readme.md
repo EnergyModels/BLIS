@@ -26,11 +26,25 @@ Requirements:
 ---
 
 To install:
-1) Git clone to desired directory or download from git website and unzip
-2) Open anaconda2 prompt (or other package manager)
-3) Change directory to within blis folder such that "blis" and "examples" are subdirectories
-4) 'pip install .'
-5) Open an example file and run in a python environment
+
+
+With git and anaconda 3 installed:
+1) Start anaconda 3 terminal\
+    Windows: Anaconda Prompt (anaconda3)\
+    Linux: start terminal 
+    >module load anaconda
+2) Change to directory for installation
+    > cd directory 
+3) Clone to desired directory (if git not installed, download directly from github)
+    > git clone https://www.github.com/EnergyModels/blis
+4) Move to blis directory
+    > cd blis
+    > module load anaconda
+5) Create and activate environment
+    > conda env create
+    > source activate blis-py3
+3) Install blis
+    > pip install .
  
 ---
 
@@ -63,6 +77,6 @@ File Overview:
 		
 ---
 
-Release history:
-V1.0 - Uses Python 2.7, version used in "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143
-V2.0.0 - Updated to for Python 3.7
+Release history: \
+V1.0 - Uses Python 2.7, version used in "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143 \
+V2.0.0 - Updated to for Python 3.7 \
