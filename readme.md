@@ -39,9 +39,8 @@ With git and anaconda 3 installed:
     > git clone https://www.github.com/EnergyModels/blis
 4) Move to blis directory
     > cd blis
-    > module load anaconda
 5) Create and activate environment
-    > conda env create
+    > conda env create\
     > source activate blis-py3
 3) Install blis
     > pip install .
@@ -78,5 +77,9 @@ File Overview:
 ---
 
 Release history: \
-V1.0 - Uses Python 2.7, version used in "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143 \
-V2.0.0 - Updated to for Python 3.7 \
+- V1.0 - Uses Python 2.7, version used in "Feasibility of using sCO2 turbines to Balance Load in power grids with a high deployment of solar generation" by Bennett et al., available at https://doi.org/10.1016/j.energy.2019.05.143 \
+- V2.0.0 - Updated to for Python 3.7 \
+
+
+Notes:
+- To run with SLURM files, replace ncpus = -1 with ncpus = int(os.getenv('NUM_PROCS'))

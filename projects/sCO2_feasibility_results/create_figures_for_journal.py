@@ -129,7 +129,7 @@ plt.close()
 
 #%%=============================================================================#
 # Figure 6 - LCOE
-results_filename = "../sCO2_feasibility_results/results_monte_carlo.csv"
+results_filename = "results_monte_carlo.csv"
 savename = "Fig6_LCOE.png"
 #=============================================================================#
 sns.reset_orig
@@ -266,7 +266,7 @@ df_stats.to_csv('stats.csv')
 
 #%%=============================================================================#
 # Figure 7 - Time of Day Emissions
-results_filename = "../sCO2_feasibility_results/results_monte_carlo.csv"
+results_filename = "results_monte_carlo.csv"
 savename_emissions = "Fig7_TOD_Emissions.png"
 #=============================================================================#
 sns.set_style("white")
@@ -354,7 +354,7 @@ plt.close()
 
 #%%=============================================================================#
 # Figure 8 - sCO2 Sensitivity
-results_filename = "../sCO2_feasibility_results/results_monte_carlo.csv"
+results_filename = "results_monte_carlo.csv"
 savename = "Fig8_sCO2_Sensitivity.png"
 #=============================================================================#
 sns.set_style('white')
@@ -482,7 +482,7 @@ plt.savefig(savename,dpi=DPI,bbox_inches="tight")
 plt.close()
 #%%=============================================================================#
 # Figure 9 - Ramp Rate Sensitivity
-results_filename = "../sCO2_feasibility_results/results_sweep_rampRate.csv"
+results_filename = "results_sweep_rampRate.csv"
 savename = "Fig9_RampRate_Deficit.png"
 #=============================================================================#
 sns.set_style('white')
@@ -555,7 +555,7 @@ plt.close()
 
 #%%=============================================================================#
 # Figure 10 - Curtailment
-results_filename = "../sCO2_feasibility_results/results_monte_carlo.csv"
+results_filename = "results_monte_carlo.csv"
 savename = "Fig10_Curtailment.png"
 #=============================================================================#
 sns.set_style('white')
@@ -663,7 +663,7 @@ plt.close()
 
 #%%=============================================================================#
 # Figure 11 - Impact of battery size
-results_filename = "../sCO2_feasibility_results/results_sweep_battSize.csv"
+results_filename = "results_sweep_battSize.csv"
 savename = "Fig11_BatterySize.png"
 #=============================================================================#
 #sns.reset_orig
