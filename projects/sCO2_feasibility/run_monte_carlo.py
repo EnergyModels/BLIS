@@ -23,6 +23,7 @@ import pandas as pd
 import time
 from joblib import Parallel, delayed, parallel_backend
 from blis import Solar, Fuel, Battery, PowerPlant, defaultInputs, HRES, monteCarloInputs
+import os
 
 
 # =====================
@@ -132,7 +133,7 @@ if __name__ == '__main__':
 
                 # Perform Simulations (Run all plant variations in parallel)
                 with parallel_backend('multiprocessing', n_jobs=ncpus):
-                    output = Parallel(n_jobs=ncpus,verbose=5)(
+                    output = Parallel(n_jobs=ncpus, verbose=5)(
                         delayed(parameterSweep)(dataFile, solarCapacity, battSize, inputs.loc[index], index) for index
                         in range(iterations))
 

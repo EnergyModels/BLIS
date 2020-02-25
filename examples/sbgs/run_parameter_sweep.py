@@ -24,6 +24,7 @@ import time
 import numpy as np
 from joblib import Parallel, delayed, parallel_backend
 from blis import Solar, Grid, Battery, SBGS
+import os
 
 
 # =====================
