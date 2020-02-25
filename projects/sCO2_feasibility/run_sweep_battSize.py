@@ -109,7 +109,7 @@ if __name__ == '__main__':
     battSizes = np.linspace(0, 100, iterations)
 
     # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
-    xls_filename = "../sCO2_feasibility_results/inputs_montecarlo.xlsx"
+    xls_filename = "inputs_montecarlo.xlsx"
     sheetname = "sCO2"
 
     # Number of cores to use

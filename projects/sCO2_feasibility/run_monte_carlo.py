@@ -103,7 +103,7 @@ if __name__ == '__main__':
     battSizes = [0, 30.0]
 
     # Monte Carlo Case Inputs (uses excel, each sheet is a separate study)
-    xls_filename = "../sCO2_feasibility_results/inputs_montecarlo.xlsx"
+    xls_filename = "inputs_montecarlo.xlsx"
     # sheetnames   = ["sCO2","OCGT","CCGT","sCO2_CCS","CCGT_CCS"]
     sheetnames = ["sCO2", "OCGT", "CCGT"]
 
