@@ -21,39 +21,19 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Hardcoded Inputs:
 debug = False  # If True, additional information is presented to the console
-import numpy as np
 
 
 # ========================================================================
-# Class to hold details of the grid
-# (default is it does not have any capacity, to align with V1_00 which did not have this feature)
+# Class to hold details of the solar power plant
 # ========================================================================
-class Grid:
+class Solar:
 
     # ----------
     # Instantiate
     # ----------
-    def __init__(self, capacity=0.0, maxEmissions=0.5, emissionCurve_hr=np.linspace(1, 24, 24),
-                 emissionCurve_pct=np.linspace(100, 100, 24), cost_OM_var=100.0):
-        # Capacity
-        self.capacity = capacity  # (MW)
-
-        # Emissions:
-        self.maxEmissions = maxEmissions  # CO2 emissions [tons] per MWh electric
-        self.emissionCurve_hr = emissionCurve_hr  # ($/kW/year)
-        self.emissionCurve_pct = emissionCurve_pct  # ($/MWh)
-
-        # Costs:
-        self.cost_OM_var = cost_OM_var  # ($/MWh)
-
-    # ----------
-    # Get current emission factor
-    # ----------
-    def getEmissions(self, datetimeUTC):
-        # Calculate current emission factor based on datetimeUTC
-        emissions = self.maxEmissions
-
-        # Convert from (tons/MWh) to (tons/MW-min)
-        emissions = emissions
-
-        return emissions  # tons per MW-min electric
+    def __init__(self, plantType='PV', capacity=32.3, cost_install=2004., cost_OM_fix=22.02):
+        # Properties:
+        self.plantType = plantType  # (string) Technology type
+        self.capacity = capacity  # (MW) capacity
+        self.cost_install = cost_install  # ($/kW)
+        self.cost_OM_fix = cost_OM_fix  # ($/kW/year)
