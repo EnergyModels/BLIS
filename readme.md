@@ -19,9 +19,9 @@ Requirements:
 		pandas
 		numpy
 		joblib
-		seaborn
 		matplotlib
-		time
+		seaborn
+		xlrd
 
 ---
 
